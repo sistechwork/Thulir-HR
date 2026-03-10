@@ -187,18 +187,12 @@ export default function Kathaipom() {
             : name[0].toUpperCase();
     };
 
-
-
     return (
-        <div className="landing-background min-h-screen flex relative">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-
+        <>
             <FloatingChatbot />
-            <Sidebar />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+            <div className="flex-1 flex flex-col overflow-hidden relative z-10">
                 {/* Header */}
                 <header className="bg-card border-b border-border px-6 py-4">
                     <div>
@@ -281,7 +275,7 @@ export default function Kathaipom() {
                     </div>
                 </main>
             </div>
-        </div>
+        </>
     );
 
     function PostCard({ post }: { post: any }) {

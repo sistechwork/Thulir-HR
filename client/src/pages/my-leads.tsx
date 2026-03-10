@@ -104,6 +104,7 @@ const editLeadSchema = z.object({
   partialAmount: z.string().optional(),
   transactionNumber: z.string().optional(),
   concession: z.string().optional(),
+  program: z.string().optional().or(z.literal("")),
 });
 
 // Create lead form schema - Simplified for form submission
@@ -121,6 +122,7 @@ const createLeadSchema = z.object({
   walkinDate: z.string().optional().or(z.literal("")),
   walkinTime: z.string().optional().or(z.literal("")),
   timing: z.string().optional(),
+  program: z.string().optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -385,6 +387,7 @@ export default function MyLeadsPage() {
       partialAmount: "",
       transactionNumber: "",
       concession: "",
+      program: "",
     },
   });
 
@@ -399,6 +402,7 @@ export default function MyLeadsPage() {
       domain: "",
       sessionDays: "",
       timing: "",
+      program: "",
       notes: "",
     },
   });
@@ -428,6 +432,7 @@ export default function MyLeadsPage() {
       partialAmount: lead.partialAmount ?? "",
       transactionNumber: lead.transactionNumber ?? "",
       concession: lead.concession ?? "",
+      program: lead.program ?? "",
     });
   };
 
@@ -516,12 +521,9 @@ export default function MyLeadsPage() {
 
   if (isLoading) {
     return (
-      <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+      <>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Removed redundant background and sidebar */}
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-6">
               <UserCheck className="w-8 h-8 text-primary" />
@@ -544,7 +546,7 @@ export default function MyLeadsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -558,12 +560,9 @@ export default function MyLeadsPage() {
       errorMessage.includes("insufficient permissions");
 
     return (
-      <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+      <>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Removed redundant background and sidebar */}
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-6">
               <UserCheck className="w-8 h-8 text-primary" />
@@ -600,1217 +599,1334 @@ export default function MyLeadsPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (user?.role === 'accounts' || user?.role === 'session_organizer' || isSessOrg) {
     return (
-      <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-
-        <Sidebar />
+      <>
+        <FloatingChatbot />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-6" data-testid="page-my-leads">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <UserCheck className="w-8 h-8 text-primary" />
-                  <div>
-                    <h1
-                      className="text-3xl font-bold"
-                      data-testid="heading-my-leads"
-                    >
-                      My Leads
-                    </h1>
-                    <p className="text-muted-foreground">
-                      {filteredLeads.length > 0
-                        ? `${filteredLeads.length} lead${filteredLeads.length !== 1 ? "s" : ""} assigned to you`
-                        : "No leads assigned yet"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  {filteredLeads.length > 0 && (
-                    <Badge
-                      variant="outline"
-                      className="text-lg px-3 py-1"
-                      data-testid="badge-total-count"
-                    >
-                      {filteredLeads.length} Total
-                    </Badge>
-                  )}
-                </div>
+        <div className="space-y-6" data-testid="page-my-leads">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <UserCheck className="w-8 h-8 text-primary" />
+              <div>
+                <h1
+                  className="text-3xl font-bold"
+                  data-testid="heading-my-leads"
+                >
+                  My Leads
+                </h1>
+                <p className="text-muted-foreground">
+                  {filteredLeads.length > 0
+                    ? `${filteredLeads.length} lead${filteredLeads.length !== 1 ? "s" : ""} assigned to you`
+                    : "No leads assigned yet"}
+                </p>
               </div>
-
-              {/* Filters */}
-              {total > 0 && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Search leads by name, email, or phone..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                      data-testid="input-search-leads"
-                    />
-                  </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger
-                      className="w-full sm:w-48"
-                      data-testid="select-status-filter"
-                    >
-                      <Filter className="w-4 h-4 mr-2" />
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isSessOrgView ? (
-                        <>
-                          <SelectItem value="all">All Status (Ready for Class)</SelectItem>
-                          <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                        </>
-                      ) : (
-                        <>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="new">New</SelectItem>
-                          <SelectItem value="register">Register</SelectItem>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="not_interested">
-                            Not Interested
-                          </SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="ready_for_class">
-                            Ready for Class
-                          </SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Leads Grid */}
-              {filteredLeads.length > 0 ? (
-                <div className="grid gap-4">
-                  {filteredLeads.map((lead: any) => (
-                    <Card
-                      key={lead.id}
-                      className="shadow-green-md hover:shadow-green-bright transition-shadow"
-                      data-testid={`card-lead-${lead.id}`}
-                    >
-                      <CardHeader
-                        className="pb-3 cursor-pointer"
-                        onClick={() => handleToggleExpand(lead.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center space-x-2">
-                              <CardTitle
-                                className="text-lg"
-                                data-testid={`text-lead-name-${lead.id}`}
-                              >
-                                {lead.name}
-                              </CardTitle>
-                              {expandedLeadId === lead.id ? (
-                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                              )}
-                            </div>
-                            <CardDescription className="flex items-center space-x-2">
-                              <span data-testid={`text-lead-email-${lead.id}`}>
-                                {lead.email}
-                              </span>
-                              {lead.degree && (
-                                <>
-                                  <span>•</span>
-                                  <span
-                                    className="text-xs bg-muted px-2 py-1 rounded"
-                                    data-testid={`badge-lead-degree-${lead.id}`}
-                                  >
-                                    {lead.degree}
-                                  </span>
-                                </>
-                              )}
-                            </CardDescription>
-                          </div>
-                          <div
-                            className="flex items-center space-x-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Badge
-                              className={`status-badge ${getStatusColor(lead.status)}`}
-                              data-testid={`status-${lead.id}`}
-                            >
-                              {lead.status.replace("_", " ")}
-                            </Badge>
-                            {lead.createdAt && (
-                              <div className="flex items-center text-xs text-muted-foreground">
-                                <Clock className="w-3 h-3 mr-1" />
-                                <span>
-                                  Added{" "}
-                                  {new Date(lead.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {/* Edit Button Row - More Prominent for Accounts Users */}
-                        <div className="mt-2 flex justify-end">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="bg-primary hover:bg-primary/90"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditLead(lead);
-                            }}
-                            data-testid={`button-edit-${lead.id}`}
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit Lead
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        {/* Basic Info - Always Visible */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <Phone className="w-4 h-4 text-muted-foreground" />
-                            <span data-testid={`text-lead-phone-${lead.id}`}>
-                              {lead.phone || "Not provided"}
-                            </span>
-                          </div>
-                          {lead.location && (
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="w-4 h-4 text-muted-foreground" />
-                              <span
-                                className="truncate"
-                                data-testid={`text-lead-location-${lead.id}`}
-                              >
-                                {lead.location}
-                              </span>
-                            </div>
-                          )}
-                          {lead.sessionDays && (
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="w-4 h-4 text-muted-foreground" />
-                              <span
-                                data-testid={`text-lead-session-days-${lead.id}`}
-                              >
-                                {lead.sessionDays}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Expanded Details */}
-                        {expandedLeadId === lead.id && (
-                          <div className="mt-4 border-t pt-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Personal Information */}
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-sm flex items-center">
-                                  <User className="w-4 h-4 mr-2" />
-                                  Personal Information
-                                </h4>
-                                <div className="space-y-2 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      Email:
-                                    </span>
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-lead-email-full-${lead.id}`}
-                                    >
-                                      {lead.email}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      Degree:
-                                    </span>
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-lead-degree-full-${lead.id}`}
-                                    >
-                                      {lead.degree || "N/A"}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      Domain:
-                                    </span>
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-lead-domain-full-${lead.id}`}
-                                    >
-                                      {lead.domain || "N/A"}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      Year of Passing:
-                                    </span>
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-lead-yop-full-${lead.id}`}
-                                    >
-                                      {lead.yearOfPassing || "N/A"}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      College:
-                                    </span>
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-lead-college-full-${lead.id}`}
-                                    >
-                                      {lead.collegeName || "N/A"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Status Information */}
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-sm flex items-center">
-                                  <Timer className="w-4 h-4 mr-2" />
-                                  Status Information
-                                </h4>
-                                <div className="space-y-2 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">
-                                      Current Status:
-                                    </span>
-                                    <Badge
-                                      className={`status-badge ${getStatusColor(lead.status)}`}
-                                    >
-                                      {lead.status.replace("_", " ")}
-                                    </Badge>
-                                  </div>
-                                  {lead.changeReason && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">
-                                        Last Update Reason:
-                                      </span>
-                                      <span className="font-medium text-right max-w-[200px]">
-                                        {lead.changeReason}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {lead.notes && (
-                                    <div className="flex flex-col gap-1">
-                                      <span className="text-muted-foreground">
-                                        Notes:
-                                      </span>
-                                      <span className="font-medium bg-muted/50 p-2 rounded">
-                                        {lead.notes}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="h-60 flex flex-col items-center justify-center text-center p-6">
-                    <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                    <h3 className="text-lg font-semibold text-muted-foreground">
-                      No leads found
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mt-2">
-                      No leads match your search criteria.
-                    </p>
-                  </CardContent>
-                </Card>
+            </div>
+            <div className="flex items-center space-x-3">
+              {filteredLeads.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="text-lg px-3 py-1"
+                  data-testid="badge-total-count"
+                >
+                  {filteredLeads.length} Total
+                </Badge>
               )}
             </div>
+          </div>
 
-            {/* Edit Lead Dialog for Accounts Users - Complete Version */}
-            <Dialog
-              open={editingLeadId !== null}
-              onOpenChange={(open) => !open && handleCancelEdit()}
-            >
-              <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                  <DialogTitle>Edit Lead</DialogTitle>
-                  <DialogDescription>
-                    Update lead information. All changes will be tracked.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto flex-1">
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit(handleSubmitEdit)}
-                      className="space-y-4 pr-4"
-                    >
-                      {/* Basic Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name *</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Full name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+          {/* Filters */}
+          {total > 0 && (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search leads by name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-leads"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-full sm:w-48"
+                  data-testid="select-status-filter"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {isSessOrgView ? (
+                    <>
+                      <SelectItem value="all">All Status (Ready for Class)</SelectItem>
+                      <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="register">Register</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="not_interested">
+                        Not Interested
+                      </SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="ready_for_class">
+                        Ready for Class
+                      </SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Leads Grid */}
+          {filteredLeads.length > 0 ? (
+            <div className="grid gap-4">
+              {filteredLeads.map((lead: any) => (
+                <Card
+                  key={lead.id}
+                  className="shadow-green-md hover:shadow-green-bright transition-shadow"
+                  data-testid={`card-lead-${lead.id}`}
+                >
+                  <CardHeader
+                    className="pb-3 cursor-pointer"
+                    onClick={() => handleToggleExpand(lead.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <CardTitle
+                            className="text-lg"
+                            data-testid={`text-lead-name-${lead.id}`}
+                          >
+                            {lead.name}
+                          </CardTitle>
+                          {expandedLeadId === lead.id ? (
+                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
                           )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email *</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="Email" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                        </div>
+                        <CardDescription className="flex items-center space-x-2">
+                          <span data-testid={`text-lead-email-${lead.id}`}>
+                            {lead.email}
+                          </span>
+                          {lead.degree && (
+                            <>
+                              <span>•</span>
+                              <span
+                                className="text-xs bg-muted px-2 py-1 rounded"
+                                data-testid={`badge-lead-degree-${lead.id}`}
+                              >
+                                {lead.degree}
+                              </span>
+                            </>
                           )}
-                        />
+                        </CardDescription>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Phone number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="location"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Location</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Location" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Education Details */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="degree"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Degree</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., BE/CSE, MBA" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="domain"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Domain</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Technology, Marketing" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Academic Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="yearOfPassing"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Year of Passing</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., 2023" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="collegeName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>College Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., ABC University" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Financial Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="registrationAmount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Registration Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 5000.00"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="pendingAmount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Pending Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 2000.00"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Session Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="sessionDays"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Session Days</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select session pattern" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="M,W,F">M,W,F (Monday, Wednesday, Friday)</SelectItem>
-                                  <SelectItem value="T,T,S">T,T,S (Tuesday, Thursday, Saturday)</SelectItem>
-                                  <SelectItem value="daily">Daily (Monday to Saturday)</SelectItem>
-                                  <SelectItem value="weekend">Weekend Only</SelectItem>
-                                  <SelectItem value="custom">Custom Schedule</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="timing"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Timing</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., 9:00 AM - 5:00 PM" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Walk-in Details */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="walkinDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Walk-in Date</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="walkinTime"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Walk-in Time</FormLabel>
-                              <FormControl>
-                                <Input type="time" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      {/* Status */}
-                      <div className="grid grid-cols-1 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Status</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select status" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="new">New</SelectItem>
-                                  <SelectItem value="register">Register</SelectItem>
-                                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="not_interested">Not Interested</SelectItem>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                                  <SelectItem value="wrong_number">Wrong Number</SelectItem>
-                                  <SelectItem value="not_picking">Not Picking</SelectItem>
-                                  <SelectItem value="call_back">Call Back</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-
-                      {/* Additional Financial Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="partialAmount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Partial Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 1000.00"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="concession"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Concession Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 500.00"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Transaction Details */}
-                      <FormField
-                        control={form.control}
-                        name="transactionNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Transaction Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., TXN123456" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Notes */}
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Add any additional notes..."
-                                className="min-h-[80px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Reason for Change */}
-                      <FormField
-                        control={form.control}
-                        name="changeReason"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Reason for Change</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Briefly describe the reason for this update..."
-                                className="min-h-[80px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleCancelEdit}
+                      <div
+                        className="flex items-center space-x-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Badge
+                          className={`status-badge ${getStatusColor(lead.status)}`}
+                          data-testid={`status-${lead.id}`}
                         >
-                          Cancel
-                        </Button>
-                        <Button type="submit">Save Changes</Button>
+                          {lead.status.replace("_", " ")}
+                        </Badge>
+                        {lead.createdAt && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3 mr-1" />
+                            <span>
+                              Added{" "}
+                              {new Date(lead.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </form>
-                  </Form>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </main>
+                    </div>
+                    {/* Edit Button Row - More Prominent for Accounts Users */}
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditLead(lead);
+                        }}
+                        data-testid={`button-edit-${lead.id}`}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit Lead
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {/* Basic Info - Always Visible */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span data-testid={`text-lead-phone-${lead.id}`}>
+                          {lead.phone || "Not provided"}
+                        </span>
+                      </div>
+                      {lead.location && (
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span
+                            className="truncate"
+                            data-testid={`text-lead-location-${lead.id}`}
+                          >
+                            {lead.location}
+                          </span>
+                        </div>
+                      )}
+                      {lead.sessionDays && (
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span
+                            data-testid={`text-lead-session-days-${lead.id}`}
+                          >
+                            {lead.sessionDays}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Expanded Details */}
+                    {expandedLeadId === lead.id && (
+                      <div className="mt-4 border-t pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Personal Information */}
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-sm flex items-center">
+                              <User className="w-4 h-4 mr-2" />
+                              Personal Information
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Email:
+                                </span>
+                                <span
+                                  className="font-medium"
+                                  data-testid={`text-lead-email-full-${lead.id}`}
+                                >
+                                  {lead.email}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Degree:
+                                </span>
+                                <span
+                                  className="font-medium"
+                                  data-testid={`text-lead-degree-full-${lead.id}`}
+                                >
+                                  {lead.degree || "N/A"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Domain:
+                                </span>
+                                <span
+                                  className="font-medium"
+                                  data-testid={`text-lead-domain-full-${lead.id}`}
+                                >
+                                  {lead.domain || "N/A"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Year of Passing:
+                                </span>
+                                <span
+                                  className="font-medium"
+                                  data-testid={`text-lead-yop-full-${lead.id}`}
+                                >
+                                  {lead.yearOfPassing || "N/A"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  College:
+                                </span>
+                                <span
+                                  className="font-medium"
+                                  data-testid={`text-lead-college-full-${lead.id}`}
+                                >
+                                  {lead.collegeName || "N/A"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Status Information */}
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-sm flex items-center">
+                              <Timer className="w-4 h-4 mr-2" />
+                              Status Information
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Current Status:
+                                </span>
+                                <Badge
+                                  className={`status-badge ${getStatusColor(lead.status)}`}
+                                >
+                                  {lead.status.replace("_", " ")}
+                                </Badge>
+                              </div>
+                              {lead.changeReason && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">
+                                    Last Update Reason:
+                                  </span>
+                                  <span className="font-medium text-right max-w-[200px]">
+                                    {lead.changeReason}
+                                  </span>
+                                </div>
+                              )}
+                              {lead.notes && (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-muted-foreground">
+                                    Notes:
+                                  </span>
+                                  <span className="font-medium bg-muted/50 p-2 rounded">
+                                    {lead.notes}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="h-60 flex flex-col items-center justify-center text-center p-6">
+                <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground">
+                  No leads found
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-sm mt-2">
+                  No leads match your search criteria.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
+
+        {/* Edit Lead Dialog for Accounts Users - Complete Version */}
+        <Dialog
+          open={editingLeadId !== null}
+          onOpenChange={(open) => !open && handleCancelEdit()}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Edit Lead</DialogTitle>
+              <DialogDescription>
+                Update lead information. All changes will be tracked.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmitEdit)}
+                  className="space-y-4 pr-4"
+                >
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Priority Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="new">New</SelectItem>
+                              <SelectItem value="register">Register</SelectItem>
+                              <SelectItem value="scheduled">Scheduled</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="not_interested">Not Interested</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                              <SelectItem value="wrong_number">Wrong Number</SelectItem>
+                              <SelectItem value="not_picking">Not Picking</SelectItem>
+                              <SelectItem value="call_back">Call Back</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="program"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Program</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Program" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="PET">PET</SelectItem>
+                              <SelectItem value="COURSE">COURSE</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="registrationAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 5000.00"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="pendingAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pending Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 2000.00"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Location" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Education Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="degree"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Degree</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., BE/CSE, MBA" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="domain"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Domain</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Technology, Marketing" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Academic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="yearOfPassing"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year of Passing</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 2023" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="collegeName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>College Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., ABC University" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Session Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="sessionDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Session Days</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select session pattern" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="M,W,F">M,W,F (Monday, Wednesday, Friday)</SelectItem>
+                              <SelectItem value="T,T,S">T,T,S (Tuesday, Thursday, Saturday)</SelectItem>
+                              <SelectItem value="daily">Daily (Monday to Saturday)</SelectItem>
+                              <SelectItem value="weekend">Weekend Only</SelectItem>
+                              <SelectItem value="custom">Custom Schedule</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="timing"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timing</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 9:00 AM - 5:00 PM" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Walk-in Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="walkinDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Walk-in Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="walkinTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Walk-in Time</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Additional Financial Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="partialAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Partial Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 1000.00"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="concession"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Concession Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 500.00"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Transaction Details */}
+                  <FormField
+                    control={form.control}
+                    name="transactionNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Transaction Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., TXN123456" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Notes */}
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Add any additional notes..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Reason for Change */}
+                  <FormField
+                    control={form.control}
+                    name="changeReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason for Change</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Briefly describe the reason for this update..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">Save Changes</Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
   // Default return for other users (HR, etc.)
   return (
-    <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-      {/* Decorative shapes */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-      <Sidebar />
-
+    <>
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-6" data-testid="page-my-leads">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <UserCheck className="w-8 h-8 text-primary" />
-                <div>
-                  <h1
-                    className="text-3xl font-bold"
-                    data-testid="heading-my-leads"
+      <div className="space-y-6" data-testid="page-my-leads">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <UserCheck className="w-8 h-8 text-primary" />
+            <div>
+              <h1
+                className="text-3xl font-bold"
+                data-testid="heading-my-leads"
+              >
+                My Leads
+              </h1>
+              <p className="text-muted-foreground">
+                {total > 0
+                  ? `${total} lead${total !== 1 ? "s" : ""} assigned to you`
+                  : "No leads assigned yet"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {/* Create Lead button - only for HR users */}
+            {user?.role === "hr" && (
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center space-x-2"
+                data-testid="button-create-lead"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Lead</span>
+              </Button>
+            )}
+            {total > 0 && (
+              <Badge
+                variant="outline"
+                className="text-lg px-3 py-1"
+                data-testid="badge-total-count"
+              >
+                {total} Total
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Filters */}
+        {total > 0 && (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search leads by name, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-leads"
+              />
+            </div>
+
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="w-full sm:w-48"
+                data-testid="select-status-filter"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="register">Register</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="not_interested">
+                  Not Interested
+                </SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="ready_for_class">
+                  Ready for Class
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Leads Grid */}
+        {filteredLeads.length > 0 ? (
+          <div className="grid gap-4">
+            {filteredLeads.map((lead: any) => (
+              <Card
+                key={lead.id}
+                className="shadow-green-md hover:shadow-green-bright transition-shadow"
+                data-testid={`card-lead-${lead.id}`}
+              >
+                <CardHeader
+                  className="pb-3 cursor-pointer"
+                  onClick={() => handleToggleExpand(lead.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <CardTitle
+                          className="text-lg"
+                          data-testid={`text-lead-name-${lead.id}`}
+                        >
+                          {lead.name}
+                        </CardTitle>
+                        {expandedLeadId === lead.id ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <CardDescription className="flex items-center space-x-2">
+                        <span data-testid={`text-lead-email-${lead.id}`}>
+                          {lead.email}
+                        </span>
+                        {lead.degree && (
+                          <>
+                            <span>•</span>
+                            <span
+                              className="text-xs bg-muted px-2 py-1 rounded"
+                              data-testid={`badge-lead-degree-${lead.id}`}
+                            >
+                              {lead.degree}
+                            </span>
+                          </>
+                        )}
+                      </CardDescription>
+                    </div>
+                    <div
+                      className="flex items-center space-x-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Badge
+                        className={`status-badge ${getStatusColor(lead.status)}`}
+                        data-testid={`status-${lead.id}`}
+                      >
+                        {lead.status.replace("_", " ")}
+                      </Badge>
+                      {lead.createdAt && (
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3 mr-1" />
+                          <span>
+                            Added{" "}
+                            {new Date(lead.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditLead(lead);
+                        }}
+                        data-testid={`button-edit-${lead.id}`}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      {/* Schedule Session button - only for Session Organizer role */}
+                      {(user?.role === 'session_organizer' || isSessOrg) && lead.status === 'ready_for_class' && (
+                        <Button
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm("Are you sure you want to schedule a session for this lead?")) {
+                              scheduleSessionMutation.mutate({
+                                leadId: lead.id,
+                                data: lead
+                              });
+                            }
+                          }}
+                          disabled={scheduleSessionMutation.isPending}
+                        >
+                          <CalendarCheck className="w-3 h-3 mr-1" />
+                          {scheduleSessionMutation.isPending ? "Scheduling..." : "Schedule Session"}
+                        </Button>
+                      )}
+                      {/* Delete button - only for HR users */}
+                      {user?.role === "hr" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (
+                              window.confirm(
+                                `Are you sure you want to delete lead "${lead.name}"? This action cannot be undone.`,
+                              )
+                            ) {
+                              deleteLeadMutation.mutate(lead.id);
+                            }
+                          }}
+                          disabled={deleteLeadMutation.isPending}
+                          className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                          data-testid={`button-delete-${lead.id}`}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          {deleteLeadMutation.isPending
+                            ? "Deleting..."
+                            : "Delete"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {/* Basic Info - Always Visible */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span data-testid={`text-lead-phone-${lead.id}`}>
+                        {lead.phone || "Not provided"}
+                      </span>
+                    </div>
+                    {lead.location && (
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span
+                          className="truncate"
+                          data-testid={`text-lead-location-${lead.id}`}
+                        >
+                          {lead.location}
+                        </span>
+                      </div>
+                    )}
+                    {lead.sessionDays && (
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span
+                          data-testid={`text-lead-session-days-${lead.id}`}
+                        >
+                          {lead.sessionDays}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expanded Details */}
+                  {expandedLeadId === lead.id && (
+                    <div className="mt-4 border-t pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Personal Information */}
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center">
+                            <User className="w-4 h-4 mr-2" />
+                            Personal Information
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Email:
+                              </span>
+                              <span
+                                data-testid={`expanded-email-${lead.id}`}
+                              >
+                                {lead.email}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Phone:
+                              </span>
+                              <span
+                                data-testid={`expanded-phone-${lead.id}`}
+                              >
+                                {lead.phone || "Not provided"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Location:
+                              </span>
+                              <span
+                                data-testid={`expanded-location-${lead.id}`}
+                              >
+                                {lead.location || "Not provided"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Academic & Professional */}
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center">
+                            <GraduationCap className="w-4 h-4 mr-2" />
+                            Academic & Professional
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Degree:
+                              </span>
+                              <span
+                                data-testid={`expanded-degree-${lead.id}`}
+                              >
+                                {lead.degree || "Not provided"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Domain:
+                              </span>
+                              <span
+                                data-testid={`expanded-domain-${lead.id}`}
+                              >
+                                {lead.domain || "Not provided"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                College Name:
+                              </span>
+                              <span
+                                data-testid={`expanded-college-name-${lead.id}`}
+                              >
+                                {lead.collegeName || "Not provided"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Year of Passing:
+                              </span>
+                              <span
+                                data-testid={`expanded-year-of-passing-${lead.id}`}
+                              >
+                                {lead.yearOfPassing || "Not provided"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Session Information */}
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center">
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Session Information
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Session Days:
+                              </span>
+                              <span
+                                data-testid={`expanded-session-days-${lead.id}`}
+                              >
+                                {lead.sessionDays || "Not set"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Timing:
+                              </span>
+                              <span
+                                data-testid={`expanded-timing-${lead.id}`}
+                              >
+                                {lead.timing || "Not set"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Walk-in Date:
+                              </span>
+                              <span
+                                data-testid={`expanded-walkin-date-${lead.id}`}
+                              >
+                                {lead.walkinDate || "Not set"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Walk-in Time:
+                              </span>
+                              <span
+                                data-testid={`expanded-walkin-time-${lead.id}`}
+                              >
+                                {lead.walkinTime || "Not set"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Additional Information */}
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center">
+                            <Building2 className="w-4 h-4 mr-2" />
+                            Additional Information
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Status:
+                              </span>
+                              <Badge
+                                className={`status-badge ${getStatusColor(lead.status)}`}
+                              >
+                                {lead.status.replace("_", " ")}
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Registration Amount:
+                              </span>
+                              <span
+                                data-testid={`expanded-registration-amount-${lead.id}`}
+                              >
+                                {lead.registrationAmount
+                                  ? `₹${parseFloat(lead.registrationAmount).toFixed(2)}`
+                                  : "Not set"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Pending Amount:
+                              </span>
+                              <span
+                                data-testid={`expanded-pending-amount-${lead.id}`}
+                              >
+                                {lead.pendingAmount
+                                  ? `₹${parseFloat(lead.pendingAmount).toFixed(2)}`
+                                  : "Not set"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Created:
+                              </span>
+                              <span>
+                                {new Date(
+                                  lead.createdAt,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Updated:
+                              </span>
+                              <span>
+                                {new Date(
+                                  lead.updatedAt,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {lead.notes && (
+                        <div className="mt-4">
+                          <h4 className="font-semibold text-sm mb-2">
+                            Notes
+                          </h4>
+                          <div className="p-3 bg-muted rounded text-sm">
+                            <p data-testid={`expanded-notes-${lead.id}`}>
+                              {lead.notes}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <UserCheck className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              {total === 0 ? (
+                <div className="space-y-2">
+                  <h3
+                    className="text-lg font-semibold"
+                    data-testid="text-no-leads-title"
                   >
-                    My Leads
-                  </h1>
-                  <p className="text-muted-foreground">
-                    {total > 0
-                      ? `${total} lead${total !== 1 ? "s" : ""} assigned to you`
-                      : "No leads assigned yet"}
+                    No leads assigned yet
+                  </h3>
+                  <p
+                    className="text-muted-foreground"
+                    data-testid="text-no-leads-description"
+                  >
+                    Once leads are assigned to you, they will appear here
+                    for easy management.
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                {/* Create Lead button - only for HR users */}
-                {user?.role === "hr" && (
+              ) : (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">
+                    No matching leads found
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search terms or filters.
+                  </p>
                   <Button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center space-x-2"
-                    data-testid="button-create-lead"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create Lead</span>
-                  </Button>
-                )}
-                {total > 0 && (
-                  <Badge
                     variant="outline"
-                    className="text-lg px-3 py-1"
-                    data-testid="badge-total-count"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("all");
+                    }}
+                    data-testid="button-clear-filters"
                   >
-                    {total} Total
-                  </Badge>
-                )}
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Passed to Accounts Data Section - Only for Accounts Users */}
+        {(user?.role as string) === 'accounts' && (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <Share2 className="w-8 h-8 text-blue-600" />
+              <div>
+                <h2 className="text-2xl font-bold">Passed to Accounts Data</h2>
+                <p className="text-muted-foreground">
+                  {accountsPendingData?.total > 0
+                    ? `${accountsPendingData.total} lead${accountsPendingData.total !== 1 ? "s" : ""} waiting for processing`
+                    : "No data passed from HR yet"}
+                </p>
               </div>
             </div>
 
-            {/* Filters */}
-            {total > 0 && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Search leads by name, email, or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                    data-testid="input-search-leads"
-                  />
-                </div>
-
-
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger
-                    className="w-full sm:w-48"
-                    data-testid="select-status-filter"
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="register">Register</SelectItem>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="not_interested">
-                      Not Interested
-                    </SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="ready_for_class">
-                      Ready for Class
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Leads Grid */}
-            {filteredLeads.length > 0 ? (
+            {accountsPendingLoading ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">Loading accounts pending leads...</p>
+                </CardContent>
+              </Card>
+            ) : accountsPendingData?.leads && accountsPendingData.leads.length > 0 ? (
               <div className="grid gap-4">
-                {filteredLeads.map((lead: any) => (
-                  <Card
-                    key={lead.id}
-                    className="shadow-green-md hover:shadow-green-bright transition-shadow"
-                    data-testid={`card-lead-${lead.id}`}
-                  >
-                    <CardHeader
-                      className="pb-3 cursor-pointer"
-                      onClick={() => handleToggleExpand(lead.id)}
-                    >
+                {accountsPendingData.leads.map((lead: any) => (
+                  <Card key={lead.id} className="shadow-blue-md hover:shadow-blue-bright transition-shadow">
+                    <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1 flex-1">
-                          <div className="flex items-center space-x-2">
-                            <CardTitle
-                              className="text-lg"
-                              data-testid={`text-lead-name-${lead.id}`}
-                            >
-                              {lead.name}
-                            </CardTitle>
-                            {expandedLeadId === lead.id ? (
-                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </div>
-                          <CardDescription className="flex items-center space-x-2">
-                            <span data-testid={`text-lead-email-${lead.id}`}>
-                              {lead.email}
-                            </span>
-                            {lead.degree && (
-                              <>
-                                <span>•</span>
-                                <span
-                                  className="text-xs bg-muted px-2 py-1 rounded"
-                                  data-testid={`badge-lead-degree-${lead.id}`}
-                                >
-                                  {lead.degree}
-                                </span>
-                              </>
-                            )}
-                          </CardDescription>
+                          <CardTitle className="text-lg">{lead.name}</CardTitle>
+                          <CardDescription>{lead.email}</CardDescription>
                         </div>
-                        <div
-                          className="flex items-center space-x-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Badge
-                            className={`status-badge ${getStatusColor(lead.status)}`}
-                            data-testid={`status-${lead.id}`}
-                          >
-                            {lead.status.replace("_", " ")}
-                          </Badge>
-                          {lead.createdAt && (
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Clock className="w-3 h-3 mr-1" />
-                              <span>
-                                Added{" "}
-                                {new Date(lead.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditLead(lead);
-                            }}
-                            data-testid={`button-edit-${lead.id}`}
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
-                          {/* Schedule Session button - only for Session Organizer role */}
-                          {(user?.role === 'session_organizer' || isSessOrg) && lead.status === 'ready_for_class' && (
-                            <Button
-                              size="sm"
-                              className="bg-primary hover:bg-primary/90"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm("Are you sure you want to schedule a session for this lead?")) {
-                                  scheduleSessionMutation.mutate({
-                                    leadId: lead.id,
-                                    data: lead
-                                  });
-                                }
-                              }}
-                              disabled={scheduleSessionMutation.isPending}
-                            >
-                              <CalendarCheck className="w-3 h-3 mr-1" />
-                              {scheduleSessionMutation.isPending ? "Scheduling..." : "Schedule Session"}
-                            </Button>
-                          )}
-                          {/* Delete button - only for HR users */}
-                          {user?.role === "hr" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (
-                                  window.confirm(
-                                    `Are you sure you want to delete lead "${lead.name}"? This action cannot be undone.`,
-                                  )
-                                ) {
-                                  deleteLeadMutation.mutate(lead.id);
-                                }
-                              }}
-                              disabled={deleteLeadMutation.isPending}
-                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                              data-testid={`button-delete-${lead.id}`}
-                            >
-                              <Trash2 className="w-3 h-3 mr-1" />
-                              {deleteLeadMutation.isPending
-                                ? "Deleting..."
-                                : "Delete"}
-                            </Button>
-                          )}
-                        </div>
+                        <Badge className={`status-badge ${getStatusColor(lead.status)}`}>
+                          {lead.status.replace("_", " ")}
+                        </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      {/* Basic Info - Always Visible */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span data-testid={`text-lead-phone-${lead.id}`}>
-                            {lead.phone || "Not provided"}
-                          </span>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Phone:</span>
+                          <p className="font-medium">{lead.phone}</p>
                         </div>
-                        {lead.location && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="w-4 h-4 text-muted-foreground" />
-                            <span
-                              className="truncate"
-                              data-testid={`text-lead-location-${lead.id}`}
-                            >
-                              {lead.location}
-                            </span>
-                          </div>
-                        )}
-                        {lead.sessionDays && (
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <span
-                              data-testid={`text-lead-session-days-${lead.id}`}
-                            >
-                              {lead.sessionDays}
-                            </span>
-                          </div>
-                        )}
+                        <div>
+                          <span className="text-muted-foreground">Location:</span>
+                          <p className="font-medium">{lead.location}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Walk-in Date:</span>
+                          <p className="font-medium">{lead.walkinDate || "Not set"}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Walk-in Time:</span>
+                          <p className="font-medium">{lead.walkinTime || "Not set"}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Registration Amount:</span>
+                          <p className="font-medium">
+                            {lead.registrationAmount ? `₹${parseFloat(lead.registrationAmount).toFixed(2)}` : "Not set"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Degree:</span>
+                          <p className="font-medium">{lead.degree || "Not provided"}</p>
+                        </div>
                       </div>
-
-                      {/* Expanded Details */}
-                      {expandedLeadId === lead.id && (
-                        <div className="mt-4 border-t pt-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Personal Information */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm flex items-center">
-                                <User className="w-4 h-4 mr-2" />
-                                Personal Information
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Email:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-email-${lead.id}`}
-                                  >
-                                    {lead.email}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Phone:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-phone-${lead.id}`}
-                                  >
-                                    {lead.phone || "Not provided"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Location:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-location-${lead.id}`}
-                                  >
-                                    {lead.location || "Not provided"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Academic & Professional */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm flex items-center">
-                                <GraduationCap className="w-4 h-4 mr-2" />
-                                Academic & Professional
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Degree:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-degree-${lead.id}`}
-                                  >
-                                    {lead.degree || "Not provided"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Domain:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-domain-${lead.id}`}
-                                  >
-                                    {lead.domain || "Not provided"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    College Name:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-college-name-${lead.id}`}
-                                  >
-                                    {lead.collegeName || "Not provided"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Year of Passing:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-year-of-passing-${lead.id}`}
-                                  >
-                                    {lead.yearOfPassing || "Not provided"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Session Information */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm flex items-center">
-                                <Calendar className="w-4 h-4 mr-2" />
-                                Session Information
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Session Days:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-session-days-${lead.id}`}
-                                  >
-                                    {lead.sessionDays || "Not set"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Timing:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-timing-${lead.id}`}
-                                  >
-                                    {lead.timing || "Not set"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Walk-in Date:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-walkin-date-${lead.id}`}
-                                  >
-                                    {lead.walkinDate || "Not set"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Walk-in Time:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-walkin-time-${lead.id}`}
-                                  >
-                                    {lead.walkinTime || "Not set"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Additional Information */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm flex items-center">
-                                <Building2 className="w-4 h-4 mr-2" />
-                                Additional Information
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Status:
-                                  </span>
-                                  <Badge
-                                    className={`status-badge ${getStatusColor(lead.status)}`}
-                                  >
-                                    {lead.status.replace("_", " ")}
-                                  </Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Registration Amount:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-registration-amount-${lead.id}`}
-                                  >
-                                    {lead.registrationAmount
-                                      ? `₹${parseFloat(lead.registrationAmount).toFixed(2)}`
-                                      : "Not set"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Pending Amount:
-                                  </span>
-                                  <span
-                                    data-testid={`expanded-pending-amount-${lead.id}`}
-                                  >
-                                    {lead.pendingAmount
-                                      ? `₹${parseFloat(lead.pendingAmount).toFixed(2)}`
-                                      : "Not set"}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Created:
-                                  </span>
-                                  <span>
-                                    {new Date(
-                                      lead.createdAt,
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Updated:
-                                  </span>
-                                  <span>
-                                    {new Date(
-                                      lead.updatedAt,
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {lead.notes && (
-                            <div className="mt-4">
-                              <h4 className="font-semibold text-sm mb-2">
-                                Notes
-                              </h4>
-                              <div className="p-3 bg-muted rounded text-sm">
-                                <p data-testid={`expanded-notes-${lead.id}`}>
-                                  {lead.notes}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -1818,581 +1934,47 @@ export default function MyLeadsPage() {
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <UserCheck className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  {total === 0 ? (
-                    <div className="space-y-2">
-                      <h3
-                        className="text-lg font-semibold"
-                        data-testid="text-no-leads-title"
-                      >
-                        No leads assigned yet
-                      </h3>
-                      <p
-                        className="text-muted-foreground"
-                        data-testid="text-no-leads-description"
-                      >
-                        Once leads are assigned to you, they will appear here
-                        for easy management.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">
-                        No matching leads found
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Try adjusting your search terms or filters.
-                      </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchTerm("");
-                          setStatusFilter("all");
-                        }}
-                        data-testid="button-clear-filters"
-                      >
-                        Clear Filters
-                      </Button>
-                    </div>
-                  )}
+                  <Share2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold">No data to process</h3>
+                  <p className="text-muted-foreground">Leads passed by HR will appear here</p>
                 </CardContent>
               </Card>
             )}
+          </div>
+        )}
 
-            {/* Passed to Accounts Data Section - Only for Accounts Users */}
-            {(user?.role as string) === 'accounts' && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Share2 className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <h2 className="text-2xl font-bold">Passed to Accounts Data</h2>
-                    <p className="text-muted-foreground">
-                      {accountsPendingData?.total > 0
-                        ? `${accountsPendingData.total} lead${accountsPendingData.total !== 1 ? "s" : ""} waiting for processing`
-                        : "No data passed from HR yet"}
-                    </p>
-                  </div>
-                </div>
-
-                {accountsPendingLoading ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <p className="text-muted-foreground">Loading accounts pending leads...</p>
-                    </CardContent>
-                  </Card>
-                ) : accountsPendingData?.leads && accountsPendingData.leads.length > 0 ? (
-                  <div className="grid gap-4">
-                    {accountsPendingData.leads.map((lead: any) => (
-                      <Card key={lead.id} className="shadow-blue-md hover:shadow-blue-bright transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1 flex-1">
-                              <CardTitle className="text-lg">{lead.name}</CardTitle>
-                              <CardDescription>{lead.email}</CardDescription>
-                            </div>
-                            <Badge className={`status-badge ${getStatusColor(lead.status)}`}>
-                              {lead.status.replace("_", " ")}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Phone:</span>
-                              <p className="font-medium">{lead.phone}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Location:</span>
-                              <p className="font-medium">{lead.location}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Walk-in Date:</span>
-                              <p className="font-medium">{lead.walkinDate || "Not set"}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Walk-in Time:</span>
-                              <p className="font-medium">{lead.walkinTime || "Not set"}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Registration Amount:</span>
-                              <p className="font-medium">
-                                {lead.registrationAmount ? `₹${parseFloat(lead.registrationAmount).toFixed(2)}` : "Not set"}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Degree:</span>
-                              <p className="font-medium">{lead.degree || "Not provided"}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <Share2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold">No data to process</h3>
-                      <p className="text-muted-foreground">Leads passed by HR will appear here</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {/* Edit Lead Dialog */}
-            <Dialog
-              open={editingLeadId !== null}
-              onOpenChange={(open) => !open && handleCancelEdit()}
-            >
-              <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                  <DialogTitle>Edit Lead</DialogTitle>
-                  <DialogDescription>
-                    Update lead status and add notes. Changes will be tracked in
-                    the audit trail.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto flex-1">
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit(handleSubmitEdit)}
-                      className="space-y-4 pr-4"
-                    >
-                      {/* Basic Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Full name"
-                                  {...field}
-                                  data-testid="input-edit-name"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="email"
-                                  placeholder="Email address"
-                                  {...field}
-                                  data-testid="input-edit-email"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Phone number"
-                                  {...field}
-                                  data-testid="input-edit-phone"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="location"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Location</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Location"
-                                  {...field}
-                                  data-testid="input-edit-location"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="degree"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Degree</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., BE/CSE, MBA"
-                                  {...field}
-                                  data-testid="input-edit-degree"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="domain"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Domain</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., Technology, Marketing"
-                                  {...field}
-                                  data-testid="input-edit-domain"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Academic Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="yearOfPassing"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Year of Passing</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., 2023"
-                                  {...field}
-                                  data-testid="input-edit-year-of-passing"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="collegeName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>College Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., ABC University"
-                                  {...field}
-                                  data-testid="input-edit-college-name"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Financial Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="registrationAmount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Registration Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 5000.00"
-                                  {...field}
-                                  data-testid="input-edit-registration-amount"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="pendingAmount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Pending Amount</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="e.g., 2000.00"
-                                  {...field}
-                                  data-testid="input-edit-pending-amount"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Session Information */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="sessionDays"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Session Days</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-edit-session-days">
-                                    <SelectValue placeholder="Select session pattern" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="M,W,F">
-                                    M,W,F (Monday, Wednesday, Friday)
-                                  </SelectItem>
-                                  <SelectItem value="T,T,S">
-                                    T,T,S (Tuesday, Thursday, Saturday)
-                                  </SelectItem>
-                                  <SelectItem value="daily">
-                                    Daily (Monday to Saturday)
-                                  </SelectItem>
-                                  <SelectItem value="weekend">
-                                    Weekend Only
-                                  </SelectItem>
-                                  <SelectItem value="custom">
-                                    Custom Schedule
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="timing"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Timing</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., 9:00 AM - 5:00 PM"
-                                  {...field}
-                                  data-testid="input-edit-timing"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="walkinDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Walk-in Date</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  data-testid="input-edit-walkin-date"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="walkinTime"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Walk-in Time</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="time"
-                                  {...field}
-                                  data-testid="input-edit-walkin-time"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger data-testid="select-edit-status">
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="new">New</SelectItem>
-                                <SelectItem value="register">
-                                  Register
-                                </SelectItem>
-                                <SelectItem value="scheduled">
-                                  Scheduled
-                                </SelectItem>
-                                <SelectItem value="completed">
-                                  Completed
-                                </SelectItem>
-                                <SelectItem value="not_interested">
-                                  Not Interested
-                                </SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="ready_for_class">
-                                  Ready for Class
-                                </SelectItem>
-                                <SelectItem value="wrong_number">
-                                  Wrong Number
-                                </SelectItem>
-                                <SelectItem value="not_picking">
-                                  Not Picking
-                                </SelectItem>
-                                <SelectItem value="call_back">
-                                  Call Back
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Add any notes about this lead..."
-                                className="resize-none"
-                                rows={3}
-                                {...field}
-                                data-testid="textarea-edit-notes"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="changeReason"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Reason for Change</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Briefly explain the reason for this update..."
-                                {...field}
-                                data-testid="input-change-reason"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </form>
-                  </Form>
-                </div>
-                <DialogFooter className="mt-4 pt-4 border-t gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelEdit}
-                    data-testid="button-cancel-edit"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={updateLeadMutation.isPending}
-                    data-testid="button-save-edit"
-                    onClick={form.handleSubmit(handleSubmitEdit)}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {updateLeadMutation.isPending
-                      ? "Saving..."
-                      : "Save and Pass"}
-
-                  </Button>
-                </DialogFooter>
-
-              </DialogContent>
-            </Dialog>
-
-            {/* Create Lead Modal */}
-            <Dialog
-              open={isCreateModalOpen}
-              onOpenChange={setIsCreateModalOpen}
-            >
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create New Lead</DialogTitle>
-                  <DialogDescription>
-                    Add a new lead that will be automatically assigned to you.
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...createForm}>
-                  <form
-                    onSubmit={createForm.handleSubmit((data) =>
-                      createLeadMutation.mutate(data),
-                    )}
-                    className="space-y-4"
-                  >
+        {/* Edit Lead Dialog */}
+        <Dialog
+          open={editingLeadId !== null}
+          onOpenChange={(open) => !open && handleCancelEdit()}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Edit Lead</DialogTitle>
+              <DialogDescription>
+                Update lead status and add notes. Changes will be tracked in
+                the audit trail.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmitEdit)}
+                  className="space-y-4 pr-4"
+                >
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={createForm.control}
+                      control={form.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Name *</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter lead's full name"
+                              placeholder="Full name"
                               {...field}
-                              data-testid="input-create-name"
+                              data-testid="input-edit-name"
                             />
                           </FormControl>
                           <FormMessage />
@@ -2400,7 +1982,7 @@ export default function MyLeadsPage() {
                       )}
                     />
                     <FormField
-                      control={createForm.control}
+                      control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
@@ -2408,26 +1990,30 @@ export default function MyLeadsPage() {
                           <FormControl>
                             <Input
                               type="email"
-                              placeholder="Enter email address"
+                              placeholder="Email address"
                               {...field}
-                              data-testid="input-create-email"
+                              data-testid="input-edit-email"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Priority Fields */}
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={createForm.control}
+                      control={form.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter phone number"
+                              placeholder="Phone number"
                               {...field}
-                              data-testid="input-create-phone"
+                              data-testid="input-edit-phone"
                             />
                           </FormControl>
                           <FormMessage />
@@ -2435,161 +2021,614 @@ export default function MyLeadsPage() {
                       )}
                     />
                     <FormField
-                      control={createForm.control}
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-edit-status">
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="new">New</SelectItem>
+                              <SelectItem value="register">Register</SelectItem>
+                              <SelectItem value="scheduled">Scheduled</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="not_interested">Not Interested</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                              <SelectItem value="wrong_number">Wrong Number</SelectItem>
+                              <SelectItem value="not_picking">Not Picking</SelectItem>
+                              <SelectItem value="call_back">Call Back</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="program"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Program</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Program" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="PET">PET</SelectItem>
+                              <SelectItem value="COURSE">COURSE</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="registrationAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 5000.00"
+                              {...field}
+                              data-testid="input-edit-registration-amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="pendingAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pending Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 2000.00"
+                              {...field}
+                              data-testid="input-edit-pending-amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="location"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Location</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter location"
+                              placeholder="Location"
                               {...field}
-                              data-testid="input-create-location"
+                              data-testid="input-edit-location"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="degree"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Degree</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., MBA, BE/CSE"
-                                {...field}
-                                data-testid="input-create-degree"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="domain"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Domain</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., Technology"
-                                {...field}
-                                data-testid="input-create-domain"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="sessionDays"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Session Days</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger data-testid="select-create-session-days">
-                                  <SelectValue placeholder="Select session pattern" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="M,W,F">
-                                  M,W,F (Monday, Wednesday, Friday)
-                                </SelectItem>
-                                <SelectItem value="T,T,S">
-                                  T,T,S (Tuesday, Thursday, Saturday)
-                                </SelectItem>
-                                <SelectItem value="daily">
-                                  Daily (Monday to Saturday)
-                                </SelectItem>
-                                <SelectItem value="weekend">
-                                  Weekend Only
-                                </SelectItem>
-                                <SelectItem value="custom">
-                                  Custom Schedule
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="timing"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Timing</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., 9:00 AM - 5:00 PM"
-                                {...field}
-                                data-testid="input-create-timing"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  </div>
+
+                  {/* Education Details */}
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={createForm.control}
-                      name="notes"
+                      control={form.control}
+                      name="degree"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Notes</FormLabel>
+                          <FormLabel>Degree</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder="Add any initial notes about this lead..."
-                              rows={3}
+                            <Input
+                              placeholder="e.g., BE/CSE, MBA"
                               {...field}
-                              data-testid="input-create-notes"
+                              data-testid="input-edit-degree"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <DialogFooter>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsCreateModalOpen(false)}
-                        data-testid="button-cancel-create"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={createLeadMutation.isPending}
-                        data-testid="button-save-create"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {createLeadMutation.isPending
-                          ? "Creating..."
-                          : "Create Lead"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-            <FloatingChatbot />
-          </div>
-        </main>
+                    <FormField
+                      control={form.control}
+                      name="domain"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Domain</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., Technology, Marketing"
+                              {...field}
+                              data-testid="input-edit-domain"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Academic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="yearOfPassing"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year of Passing</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., 2023"
+                              {...field}
+                              data-testid="input-edit-year-of-passing"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="collegeName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>College Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., ABC University"
+                              {...field}
+                              data-testid="input-edit-college-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Session Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="sessionDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Session Days</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-edit-session-days">
+                                <SelectValue placeholder="Select session pattern" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="M,W,F">
+                                M,W,F (Monday, Wednesday, Friday)
+                              </SelectItem>
+                              <SelectItem value="T,T,S">
+                                T,T,S (Tuesday, Thursday, Saturday)
+                              </SelectItem>
+                              <SelectItem value="daily">
+                                Daily (Monday to Saturday)
+                              </SelectItem>
+                              <SelectItem value="weekend">
+                                Weekend Only
+                              </SelectItem>
+                              <SelectItem value="custom">
+                                Custom Schedule
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="timing"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timing</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., 9:00 AM - 5:00 PM"
+                              {...field}
+                              data-testid="input-edit-timing"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="walkinDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Walk-in Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              data-testid="input-edit-walkin-date"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="walkinTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Walk-in Time</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="time"
+                              {...field}
+                              data-testid="input-edit-walkin-time"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Add any notes about this lead..."
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                            data-testid="textarea-edit-notes"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="changeReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason for Change</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Briefly explain the reason for this update..."
+                            className="min-h-[80px]"
+                            {...field}
+                            data-testid="textarea-change-reason"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </form>
+              </Form>
+            </div>
+            <DialogFooter className="mt-4 pt-4 border-t gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancelEdit}
+                data-testid="button-cancel-edit"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateLeadMutation.isPending}
+                data-testid="button-save-edit"
+                onClick={form.handleSubmit(handleSubmitEdit)}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {updateLeadMutation.isPending
+                  ? "Saving..."
+                  : "Save and Pass"}
+
+              </Button>
+            </DialogFooter>
+
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Lead Modal */}
+        <Dialog
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Lead</DialogTitle>
+              <DialogDescription>
+                Add a new lead that will be automatically assigned to you.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...createForm}>
+              <form
+                onSubmit={createForm.handleSubmit((data) =>
+                  createLeadMutation.mutate(data),
+                )}
+                className="space-y-4"
+              >
+                <FormField
+                  control={createForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter lead's full name"
+                          {...field}
+                          data-testid="input-create-name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Enter email address"
+                          {...field}
+                          data-testid="input-create-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Priority Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter phone number"
+                            {...field}
+                            data-testid="input-create-phone"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="program"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Program</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Program" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PET">PET</SelectItem>
+                            <SelectItem value="COURSE">COURSE</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter location"
+                            {...field}
+                            data-testid="input-create-location"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="degree"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., MBA, BE/CSE"
+                            {...field}
+                            data-testid="input-create-degree"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="domain"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Domain</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., Technology"
+                            {...field}
+                            data-testid="input-create-domain"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="sessionDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Session Days</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-create-session-days">
+                              <SelectValue placeholder="Select session pattern" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="M,W,F">
+                              M,W,F (Monday, Wednesday, Friday)
+                            </SelectItem>
+                            <SelectItem value="T,T,S">
+                              T,T,S (Tuesday, Thursday, Saturday)
+                            </SelectItem>
+                            <SelectItem value="daily">
+                              Daily (Monday to Saturday)
+                            </SelectItem>
+                            <SelectItem value="weekend">
+                              Weekend Only
+                            </SelectItem>
+                            <SelectItem value="custom">
+                              Custom Schedule
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={createForm.control}
+                  name="timing"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Timing</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., 9:00 AM - 5:00 PM"
+                          {...field}
+                          data-testid="input-create-timing"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add any initial notes about this lead..."
+                          rows={3}
+                          {...field}
+                          data-testid="input-create-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreateModalOpen(false)}
+                    data-testid="button-cancel-create"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createLeadMutation.isPending}
+                    data-testid="button-save-create"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {createLeadMutation.isPending
+                      ? "Creating..."
+                      : "Create Lead"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+        <FloatingChatbot />
       </div>
-    </div>
+    </>
   );
 }

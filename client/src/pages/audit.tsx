@@ -88,167 +88,159 @@ export default function Audit() {
   };
 
   return (
-    <div className="landing-background min-h-screen flex relative">
-      {/* Decorative shapes */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-
+    <>
       <FloatingChatbot />
-      <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
-        {/* Header */}
-        <header className="bg-card border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
-                Audit Trail
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Track all lead modifications and ownership transfers
-              </p>
-            </div>
-          </div>
-        </header>
-
-        {/* Search */}
-        <div className="bg-card border-b border-border px-6 py-4">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Search leads by name, email, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full max-w-md pl-10"
-              data-testid="input-search-audit"
-            />
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      {/* Header */}
+      {/* Header */}
+      <header className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
+              Audit Trail
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Track all lead modifications and ownership transfers
+            </p>
           </div>
         </div>
+      </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Lead Search Results */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Search className="mr-2 h-5 w-5" />
-                  Search Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!searchTerm ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Enter a search term to find leads and view their audit trail</p>
-                  </div>
-                ) : !leads?.leads?.length ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No leads found matching "{searchTerm}"</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {leads.leads.map((lead: any) => (
-                      <div
-                        key={lead.id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${selectedLeadId === lead.id ? 'border-primary bg-primary/5' : 'border-border'
-                          }`}
-                        onClick={() => setSelectedLeadId(lead.id)}
-                        data-testid={`lead-item-${lead.id}`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">{lead.name}</h4>
-                          <Badge className={getStatusColor(lead.status)}>
-                            {lead.status}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p>{lead.email}</p>
-                          <p>{lead.phone}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Audit Trail */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <History className="mr-2 h-5 w-5" />
-                  Audit Trail
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!selectedLeadId ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Select a lead to view its complete audit trail</p>
-                  </div>
-                ) : !leadHistory?.length ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No history found for this lead</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {leadHistory.map((entry: any, index: number) => (
-                      <div
-                        key={entry.id}
-                        className="border-l-2 border-primary pl-4 pb-4"
-                        data-testid={`history-entry-${index}`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            {entry.previousStatus && entry.newStatus && (
-                              <>
-                                <Badge variant="outline" className="text-xs">
-                                  {entry.previousStatus}
-                                </Badge>
-                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                <Badge className={`text-xs ${getStatusColor(entry.newStatus)}`}>
-                                  {entry.newStatus}
-                                </Badge>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-sm">
-                          <p className="font-medium text-foreground">
-                            {entry.changeReason || 'Status updated'}
-                          </p>
-                          <p className="text-muted-foreground mt-1">
-                            Changed by: {entry.changedBy?.fullName || entry.changedBy?.firstName || 'System'}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatDate(entry.changedAt)}
-                          </p>
-                        </div>
-
-                        {entry.changeData && (
-                          <details className="mt-2">
-                            <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                              View Details
-                            </summary>
-                            <pre className="text-xs text-muted-foreground mt-1 bg-muted p-2 rounded overflow-x-auto">
-                              {JSON.stringify(JSON.parse(entry.changeData), null, 2)}
-                            </pre>
-                          </details>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+      {/* Search */}
+      <div className="bg-card border-b border-border px-6 py-4">
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Search leads by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full max-w-md pl-10"
+            data-testid="input-search-audit"
+          />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        </div>
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Lead Search Results */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Search className="mr-2 h-5 w-5" />
+                Search Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!searchTerm ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Enter a search term to find leads and view their audit trail</p>
+                </div>
+              ) : !leads?.leads?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No leads found matching "{searchTerm}"</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {leads.leads.map((lead: any) => (
+                    <div
+                      key={lead.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${selectedLeadId === lead.id ? 'border-primary bg-primary/5' : 'border-border'
+                        }`}
+                      onClick={() => setSelectedLeadId(lead.id)}
+                      data-testid={`lead-item-${lead.id}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{lead.name}</h4>
+                        <Badge className={getStatusColor(lead.status)}>
+                          {lead.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <p>{lead.email}</p>
+                        <p>{lead.phone}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Audit Trail */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <History className="mr-2 h-5 w-5" />
+                Audit Trail
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!selectedLeadId ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Select a lead to view its complete audit trail</p>
+                </div>
+              ) : !leadHistory?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No history found for this lead</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {leadHistory.map((entry: any, index: number) => (
+                    <div
+                      key={entry.id}
+                      className="border-l-2 border-primary pl-4 pb-4"
+                      data-testid={`history-entry-${index}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          {entry.previousStatus && entry.newStatus && (
+                            <>
+                              <Badge variant="outline" className="text-xs">
+                                {entry.previousStatus}
+                              </Badge>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                              <Badge className={`text-xs ${getStatusColor(entry.newStatus)}`}>
+                                {entry.newStatus}
+                              </Badge>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-sm">
+                        <p className="font-medium text-foreground">
+                          {entry.changeReason || 'Status updated'}
+                        </p>
+                        <p className="text-muted-foreground mt-1">
+                          Changed by: {entry.changedBy?.fullName || entry.changedBy?.firstName || 'System'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDate(entry.changedAt)}
+                        </p>
+                      </div>
+
+                      {entry.changeData && (
+                        <details className="mt-2">
+                          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                            View Details
+                          </summary>
+                          <pre className="text-xs text-muted-foreground mt-1 bg-muted p-2 rounded overflow-x-auto">
+                            {JSON.stringify(JSON.parse(entry.changeData), null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </>
   );
 }

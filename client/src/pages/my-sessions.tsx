@@ -250,19 +250,17 @@ export default function MySessionsPage() {
 
     if (isLoading) {
         return (
-            <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-                <Sidebar />
-                <div className="flex-1 flex flex-col p-6 ml-64">
+            <>
+                <div className="flex-1 flex flex-col p-6">
                     <p>Loading sessions...</p>
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+        <>
+            <div className="flex-1 flex flex-col overflow-hidden relative z-10">
                 <main className="flex-1 overflow-y-auto p-6">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
@@ -391,6 +389,6 @@ export default function MySessionsPage() {
                     </Form>
                 </DialogContent>
             </Dialog>
-        </div>
+        </>
     );
 }

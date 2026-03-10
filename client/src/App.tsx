@@ -33,6 +33,7 @@ import EmailSettings from "@/pages/EmailSettings";
 import TestEmail from "@/pages/TestEmail";
 import ClassMarksPage from "@/pages/class-marks";
 import NotFound from "@/pages/not-found";
+import ResponsiveLayout from "@/components/ResponsiveLayout";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -53,37 +54,40 @@ function Router() {
         {isLoading || !isAuthenticated ? (
           <Route path="/" component={Landing} />
         ) : (
-          <>
-            <Route path="/" component={Dashboard} />
-            <Route path="/leads">
-              {userRole === 'session_organizer' || isSessOrg ? (
-                <MyLeads />
-              ) : (
-                <Leads />
-              )}
-            </Route>
+          <ResponsiveLayout>
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/leads">
+                {userRole === 'session_organizer' || isSessOrg ? (
+                  <MyLeads />
+                ) : (
+                  <Leads />
+                )}
+              </Route>
 
-            <Route path="/my-leads" component={MyLeads} />
-            <Route path="/my-sessions" component={MySessions} />
-            <Route path="/my-completion" component={MyCompletion} />
-            <Route path="/allocated-students" component={AllocatedStudentsPage} />
-            <Route path="/classes/:id/students" component={ClassStudentsPage} />
-            <Route path="/classes/:id/attendance" component={ClassAttendancePage} />
-            <Route path="/classes/:id/marks" component={ClassMarksPage} />
-            <Route path="/classes" component={MyClasses} />
-            <Route path="/users" component={Users} />
-            <Route path="/reports" component={Reports} />
-            <Route path="/audit" component={Audit} />
-            <Route path="/tally" component={Tally} />
-            <Route path="/live-monitor" component={LiveMonitor} />
-            <Route path="/chat-history" component={ChatHistory} />
-            <Route path="/productivity" component={Productivity} />
-            <Route path="/my-team-lead" component={TeamLeadDashboard} />
-            <Route path="/kathaipom" component={Kathaipom} />
-            <Route path="/tech-docs" component={TechDocs} />
-            <Route path="/email-settings" component={EmailSettings} />
-            <Route path="/test-email" component={TestEmail} />
-          </>
+              <Route path="/my-leads" component={MyLeads} />
+              <Route path="/my-sessions" component={MySessions} />
+              <Route path="/my-completion" component={MyCompletion} />
+              <Route path="/allocated-students" component={AllocatedStudentsPage} />
+              <Route path="/classes/:id/students" component={ClassStudentsPage} />
+              <Route path="/classes/:id/attendance" component={ClassAttendancePage} />
+              <Route path="/classes/:id/marks" component={ClassMarksPage} />
+              <Route path="/classes" component={MyClasses} />
+              <Route path="/users" component={Users} />
+              <Route path="/reports" component={Reports} />
+              <Route path="/audit" component={Audit} />
+              <Route path="/tally" component={Tally} />
+              <Route path="/live-monitor" component={LiveMonitor} />
+              <Route path="/chat-history" component={ChatHistory} />
+              <Route path="/productivity" component={Productivity} />
+              <Route path="/my-team-lead" component={TeamLeadDashboard} />
+              <Route path="/kathaipom" component={Kathaipom} />
+              <Route path="/tech-docs" component={TechDocs} />
+              <Route path="/email-settings" component={EmailSettings} />
+              <Route path="/test-email" component={TestEmail} />
+              <Route component={NotFound} />
+            </Switch>
+          </ResponsiveLayout>
         )}
         <Route component={NotFound} />
       </Switch>

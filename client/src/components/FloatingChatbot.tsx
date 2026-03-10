@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import chatbotLogo from "@assets/nimmi_log (1)_1764161983246.png";
+import chatbotLogo from "@assets/nimmi_log (1)_1764161983246.webp";
 
 interface Message {
   id: string;
@@ -70,7 +70,7 @@ export default function FloatingChatbot() {
         credentials: 'include',
         body: JSON.stringify({
           question,
-          category: user?.category || null,
+          category: (user as any)?.category || null,
         }),
       });
 
@@ -155,17 +155,15 @@ export default function FloatingChatbot() {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
                 data-testid={`message-${message.sender}-${message.id}`}
               >
                 <div
-                  className={`px-4 py-2 rounded-lg text-sm leading-relaxed ${
-                    message.sender === "user"
-                      ? "bg-[#7C3AED] text-white rounded-br-none max-w-xs"
-                      : "bg-white dark:bg-[#2a2a2a] text-[#1a1a1a] dark:text-[#f5f5f5] border border-[#e0e0e0] dark:border-[#333333] rounded-bl-none max-w-sm"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm leading-relaxed ${message.sender === "user"
+                    ? "bg-[#7C3AED] text-white rounded-br-none max-w-xs"
+                    : "bg-white dark:bg-[#2a2a2a] text-[#1a1a1a] dark:text-[#f5f5f5] border border-[#e0e0e0] dark:border-[#333333] rounded-bl-none max-w-sm"
+                    }`}
                 >
                   {message.sender === "bot"
                     ? formatMessageText(message.text)

@@ -202,15 +202,10 @@ export default function ChatHistory() {
   });
 
   return (
-    <div className="landing-background min-h-screen flex relative">
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-
+    <>
       <FloatingChatbot />
-      <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <header className="bg-card border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -390,6 +385,6 @@ export default function ChatHistory() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

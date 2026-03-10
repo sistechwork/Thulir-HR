@@ -176,9 +176,19 @@ export default function TallyPage() {
   const accountsUsers = usersData?.filter(u => u.role === 'accounts') || [];
 
   const leadsWithFinancialData = useMemo(() => {
-    return leads.filter(lead =>
-      lead.registrationAmount || lead.partialAmount || lead.concession || lead.transactionNumber
-    );
+    return leads.filter(lead => {
+      // Check if there is any actual financial activity
+      const hasRegAmount = lead.registrationAmount && parseFloat(lead.registrationAmount) > 0;
+      const hasPartialAmount = lead.partialAmount && parseFloat(lead.partialAmount) > 0;
+      const hasConcession = lead.concession && parseFloat(lead.concession) > 0;
+      const hasTransaction = !!lead.transactionNumber;
+
+      // Check for specific statuses that belong in Tally even if amounts aren't set yet
+      const status = lead.status?.toLowerCase().trim();
+      const isCompletedStatus = status === 'completed' || status === 'ready_for_class' || status === 'accounts_pending';
+
+      return hasRegAmount || hasPartialAmount || hasConcession || hasTransaction || isCompletedStatus;
+    });
   }, [leads]);
 
   const financialSummary = useMemo(() => {
@@ -201,7 +211,7 @@ export default function TallyPage() {
       const calculatedPending = TOTAL_FOR_LEAD - (regAmount + concessionAmount + partAmount);
 
       totalRegistration += regAmount;
-      totalPending += calculatedPending > 0 ? calculatedPending : 0;
+      totalPending += Math.max(0, calculatedPending);
       totalPartial += partAmount;
       totalCollected += (regAmount + partAmount);
       totalConcession += concessionAmount;
@@ -247,7 +257,7 @@ export default function TallyPage() {
         const pending = totalForLead - (regAmount + concAmount + partAmount);
 
         summary[lead.currentOwnerId].collected += (regAmount + partAmount);
-        summary[lead.currentOwnerId].pending += pending > 0 ? pending : 0;
+        summary[lead.currentOwnerId].pending += Math.max(0, pending);
         summary[lead.currentOwnerId].concession += concAmount;
         summary[lead.currentOwnerId].leadsCount += 1;
       }
@@ -296,15 +306,10 @@ export default function TallyPage() {
   }
 
   return (
-    <div className="landing-background min-h-screen flex relative">
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-
+    <>
       <FloatingChatbot />
-      <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-card border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -798,6 +803,6 @@ export default function TallyPage() {
           </Card>
         </main>
       </div>
-    </div>
+    </>
   );
 }

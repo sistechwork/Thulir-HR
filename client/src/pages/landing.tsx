@@ -1,10 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.png";
-import slideImage1 from "@assets/Gemini_Generated_Image_7ykxay7ykxay7ykx_1764052434472.png";
-import slideImage2 from "@assets/Gemini_Generated_Image_1d294m1d294m1d29_1764052434473.png";
-import slideImage3 from "@assets/Gemini_Generated_Image_f6qyxpf6qyxpf6qy_1764052662755.png";
+import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.webp";
+import slideImage1 from "@assets/Gemini_Generated_Image_7ykxay7ykxay7ykx_1764052434472.webp";
+import slideImage2 from "@assets/Gemini_Generated_Image_1d294m1d294m1d29_1764052434473.webp";
+import slideImage3 from "@assets/Gemini_Generated_Image_f6qyxpf6qyxpf6qy_1764052662755.webp";
 import FloatingChatbot from "@/components/FloatingChatbot";
 
 const slideImages = [slideImage1, slideImage2, slideImage3];
@@ -27,10 +27,10 @@ export default function Landing() {
     <div className="landing-background min-h-screen relative">
       {/* Decorative HR-themed shape - top left */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      
+
       {/* Decorative shape - middle right */}
       <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      
+
       {/* Diagonal accent shape - bottom */}
       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
 
@@ -41,7 +41,7 @@ export default function Landing() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-8">
-            <img 
+            <img
               src={logoImage}
               alt="VHomofi HRM Portal Logo"
               className="h-48 object-contain dark:brightness-110"
@@ -51,7 +51,7 @@ export default function Landing() {
             Advanced Lead Management System for HR Teams
           </p>
           <p className="text-lg text-[#666666] dark:text-[#999999] mt-4">
-            Streamline your lead management process with role-based access control, 
+            Streamline your lead management process with role-based access control,
             real-time analytics, and automated workflows.
           </p>
         </div>
@@ -90,9 +90,9 @@ export default function Landing() {
               <p className="text-[#666666] dark:text-[#999999]">
                 Sign in to access your Vcodez dashboard and start managing leads efficiently.
               </p>
-              <Button 
+              <Button
                 onClick={handleLogin}
-                size="lg" 
+                size="lg"
                 className="w-full bg-[#11754c] hover:bg-[#04e284] text-white font-medium"
                 data-testid="button-login"
               >

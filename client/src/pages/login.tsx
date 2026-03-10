@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.png";
+import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.webp";
 import FloatingChatbot from "@/components/FloatingChatbot";
 
 const CATEGORIES = [
@@ -139,18 +139,18 @@ export default function Login() {
 
       {/* Center: Login Form Section */}
       <div className="w-full relative z-10 flex justify-center items-center min-h-screen">
-        <div className="px-4 max-w-lg w-full">
+        <div className="px-4 max-w-lg w-full py-8">
           {/* Logo Section */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <img
               src={logoImage}
               alt="VHomofi HRM Portal Logo"
-              className="h-40 object-contain mx-auto"
+              className="h-24 sm:h-32 md:h-40 object-contain mx-auto"
             />
           </div>
 
           {/* Login Container */}
-          <div className="backdrop-blur-[100px] rounded-[32px] p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/20 text-gray-900" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.7), rgba(255,255,255,0.5))', boxShadow: '0 20px 50px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4)' }}>
+          <div className="backdrop-blur-[100px] rounded-[24px] sm:rounded-[32px] p-6 sm:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/20 text-gray-900" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.7), rgba(255,255,255,0.5))', boxShadow: '0 20px 50px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4)' }}>
 
             {/* Admin Role Selection - Shown after Admin login */}
             {showAdminRoleSelection && userRole === 'admin' ? (

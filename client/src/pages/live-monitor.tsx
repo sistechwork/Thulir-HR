@@ -28,17 +28,17 @@ export default function LiveMonitor() {
   // Auto-detect and prepend protocol if missing
   const ensureProtocol = (url: string): string => {
     if (!url) return '';
-    
+
     // If it has protocol, return as-is
     if (url.match(/^(udp|rtsp|http|https):\/\//i)) {
       return url;
     }
-    
+
     // If it looks like IP:PORT for multicast, prepend udp://
     if (url.includes(':')) {
       return `udp://${url}`;
     }
-    
+
     // Otherwise assume HTTP
     return `http://${url}`;
   };
@@ -128,11 +128,11 @@ export default function LiveMonitor() {
   const startStreaming = async () => {
     try {
       setIsLoading2(true);
-      
+
       // Ensure proper protocol format
       let streamUrlWithProtocol = ensureProtocol(multicastUrl);
       let streamUrlWithAuth = streamUrlWithProtocol;
-      
+
       // Add credentials to HTTP/HTTPS/RTSP URLs if provided
       if (cameraUsername && cameraPassword) {
         if (streamUrlWithAuth.startsWith('http://')) {
@@ -152,7 +152,7 @@ export default function LiveMonitor() {
           );
         }
       }
-      
+
       const response = await fetch('/api/hls/start', {
         method: 'POST',
         credentials: 'include',
@@ -209,8 +209,7 @@ export default function LiveMonitor() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <Sidebar />
+    <>
       <main className="flex-1 overflow-auto">
         <div className="p-8 max-w-7xl mx-auto">
           <div className="mb-8 flex justify-between items-center">
@@ -539,6 +538,6 @@ export default function LiveMonitor() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

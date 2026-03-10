@@ -135,7 +135,35 @@ The `Procfile` is already configured for Heroku.
 
 ---
 
-### 6. AWS (EC2 + RDS)
+### 6. AWS (Optimized - Serverless First)
+
+To minimize costs and leverage the 1TB Free Tier, we recommend a split deployment:
+
+#### Phase A: Frontend (S3 + CloudFront)
+1. **Build**: Run `npm run build` locally.
+2. **S3**: Create a bucket for the `dist/public` folder and enable "Static Website Hosting".
+3. **CloudFront**: Create a distribution pointing to the S3 bucket. 
+   - **Cost**: Generous **1TB free data transfer per month** via the AWS Free Tier.
+4. **ACM**: Use AWS Certificate Manager for free SSL/TLS certificates.
+
+#### Phase B: Backend (App Runner)
+1. **GitHub**: Push your code to a private GitHub repository.
+2. **App Runner**: Create a "Service" in AWS App Runner.
+3. **Connect**: Link your GitHub repository.
+4. **Configure**:
+   - **Runtime**: Node.js 20
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm run start`
+   - **Port**: 5000
+5. **Environment**: Add your `.env` variables (DATABASE_URL, MANAGER_EMAIL, etc.).
+
+#### Phase C: Database (Neon or Aurora)
+- **Option 1**: Keep using the current database on **Neon/Render** (Lowest cost).
+- **Option 2**: Use **AWS Aurora Serverless v2** if you require full AWS VPC integration.
+
+---
+
+### 7. AWS (Traditional EC2 + RDS)
 
 1. Launch an EC2 instance (Ubuntu 22.04 recommended)
 2. Create an RDS PostgreSQL database

@@ -270,6 +270,21 @@ export class DatabaseStorage implements IStorage {
           console.log("[Storage] user_id column may already exist:", colErr);
         }
       }
+
+      // Add total_amount column to leads if it doesn't exist (Self-healing migration)
+      try {
+        await db.execute(sql`
+          ALTER TABLE leads ADD COLUMN IF NOT EXISTS total_amount decimal DEFAULT '7000.00';
+        `);
+        console.log("[Storage] leads.total_amount column verified/added.");
+
+        await db.execute(sql`
+          ALTER TABLE leads ADD COLUMN IF NOT EXISTS program text;
+        `);
+        console.log("[Storage] leads.program column verified/added.");
+      } catch (err) {
+        console.log("[Storage] leads column check failed:", err);
+      }
     } catch (error) {
       console.error("[Storage] Failed to initialize schema:", error);
     }
@@ -381,6 +396,7 @@ export class DatabaseStorage implements IStorage {
     if (sanitizedUpdates.sessionDays === '') sanitizedUpdates.sessionDays = null;
     if (sanitizedUpdates.timing === '') sanitizedUpdates.timing = null;
     if (sanitizedUpdates.category === '') sanitizedUpdates.category = null;
+    if (sanitizedUpdates.program === '') sanitizedUpdates.program = null;
     // Dynamic fields from bulk import
     if (sanitizedUpdates.yearOfPassing === '') sanitizedUpdates.yearOfPassing = null;
     if (sanitizedUpdates.collegeName === '') sanitizedUpdates.collegeName = null;
@@ -390,7 +406,11 @@ export class DatabaseStorage implements IStorage {
 
     const [lead] = await db
       .update(leads)
-      .set({ ...sanitizedUpdates, updatedAt: new Date() })
+      .set({
+        ...sanitizedUpdates,
+        totalAmount: sanitizedUpdates.totalAmount, // Explicitly set to ensure mapping
+        updatedAt: new Date()
+      })
       .where(eq(leads.id, id))
       .returning();
     return lead;
@@ -655,6 +675,8 @@ export class DatabaseStorage implements IStorage {
       partialAmount: leads.partialAmount,
       transactionNumber: leads.transactionNumber,
       concession: leads.concession,
+      totalAmount: leads.totalAmount,
+      program: leads.program,
       createdAt: leads.createdAt,
       updatedAt: leads.updatedAt,
       // Include current owner details
@@ -826,13 +848,15 @@ UNION
           return { leads: [], total: 0 };
         }
       } catch (error) {
-        console.error('[storage.searchLeads] Error fetching completed leads history:', error);
-        return { leads: [], total: 0 };
       }
     }
 
+    if (category) {
+      conditions.push(eq(leads.category, category as string));
+    }
+
     if (fromDate) {
-      conditions.push(gte(leads.createdAt, new Date(fromDate)));
+      conditions.push(gte(leads.createdAt, new Date(fromDate as string)));
     }
 
     if (toDate) {

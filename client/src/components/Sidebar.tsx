@@ -359,7 +359,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 backdrop-blur-[100px] border-r border-white/20 flex flex-col z-40 text-black shadow-[4px_0_24px_rgba(0,0,0,0.05)]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)' }} data-testid="sidebar">
+    <div className="h-full w-full backdrop-blur-[100px] border-r border-white/20 flex flex-col z-40 text-black shadow-[4px_0_24px_rgba(0,0,0,0.05)]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)' }} data-testid="sidebar">
       {/* Header */}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">

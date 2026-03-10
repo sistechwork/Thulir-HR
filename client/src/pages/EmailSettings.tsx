@@ -110,20 +110,18 @@ export default function EmailSettings() {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen bg-[#F0F2F5]">
-                <Sidebar />
+            <>
                 <main className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                 </main>
-            </div>
+            </>
         );
     }
 
     const isReady = config?.smtpEmail && config?.appPassword && config?.smtpServer;
 
     return (
-        <div className="flex h-screen bg-[#F0F2F5]">
-            <Sidebar />
+        <>
             <main className="flex-1 p-8 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Header */}
@@ -352,6 +350,6 @@ export default function EmailSettings() {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 }

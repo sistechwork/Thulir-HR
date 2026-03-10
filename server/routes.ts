@@ -521,6 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.transactionNumber !== undefined) updateData.transactionNumber = req.body.transactionNumber || null;
       if (req.body.concession !== undefined) updateData.concession = req.body.concession || null;
       if (req.body.totalAmount !== undefined) updateData.totalAmount = req.body.totalAmount || null;
+      if (req.body.program !== undefined) updateData.program = req.body.program || null;
 
       console.log('[Lead Update] Update data:', updateData);
 
@@ -587,15 +588,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userRole = req.user.role; // Use role from auth middleware
 
       // Build filters based on category
+      const { category } = req.query;
       const filters: any = {
         page: 1,
         limit: 100000, // Get all leads for accurate metrics
       };
 
+      if (category && category !== 'all') {
+        filters.category = category;
+      }
 
       // Fetch all leads with filters
       const result = await storage.searchLeads(filters);
       const allLeads = result.leads || [];
+      console.log(`[/api/metrics] Found ${allLeads.length} leads for role ${userRole}`);
 
       // Calculate metrics
       const totalLeads = allLeads.length;
@@ -689,17 +695,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate correct active HR count (HRs with at least one active lead)
       const activeHRCount = Object.values(hrPerformance).filter((hr: any) => hr.active > 0).length;
 
-      res.json({
+      const responseData = {
         totalLeads,
         completedLeads,
         revenue,
         activeHR: activeHRCount,
         statusDistribution,
         hrPerformance: Object.values(hrPerformance)
-      });
+      };
+      console.log(`[/api/metrics] Returning:`, JSON.stringify(responseData));
+      res.json(responseData);
     } catch (error: any) {
       console.error('[/api/metrics] Error calculating metrics:', error);
       res.status(500).json({ message: 'Failed to calculate metrics', error: error.message });
+    }
+  });
+
+  // Recent leads for dashboard activity feed
+  app.get('/api/leads/recent', isAuthenticated, async (req: any, res) => {
+    try {
+      const result = await storage.searchLeads({ limit: 12 });
+      const recentActivity = result.leads.map((lead: any) => ({
+        leadName: lead.name,
+        action: `Lead updated: ${lead.status.replace('_', ' ')}`,
+        timestamp: lead.updatedAt || lead.createdAt
+      }));
+      res.json(recentActivity);
+    } catch (error: any) {
+      console.error('Error fetching recent leads:', error);
+      res.status(500).json({ message: 'Failed to fetch recent leads' });
+    }
+  });
+
+  // All lead history for tracking
+  app.get('/api/history/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const history = await storage.getAllLeadHistory();
+      res.json(history);
+    } catch (error: any) {
+      console.error('Error fetching lead history:', error);
+      res.status(500).json({ message: 'Failed to fetch lead history' });
     }
   });
 
@@ -2901,17 +2936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analytics routes
-  app.get('/api/metrics', isAuthenticated, async (req: any, res) => {
-    try {
-      const { category } = req.query;
-      const metrics = await storage.getLeadMetrics();
-      res.json(metrics);
-    } catch (error) {
-      console.error("Error fetching metrics:", error);
-      res.status(500).json({ message: "Failed to fetch metrics" });
-    }
-  });
+  // Tech support dashboard routes
 
   app.get('/api/tech-support/dashboard', isAuthenticated, async (req: any, res) => {
     try {

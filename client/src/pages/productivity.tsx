@@ -201,8 +201,7 @@ export default function Productivity() {
 
   if ((user as any)?.role !== 'manager') {
     return (
-      <div className="flex h-screen">
-        <Sidebar />
+      <>
         <main className="flex-1 overflow-auto p-8">
           <div className="text-center py-12">
             <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
@@ -210,14 +209,13 @@ export default function Productivity() {
             <p className="text-muted-foreground">Only managers can view productivity data.</p>
           </div>
         </main>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <main className="flex-1 overflow-auto ml-64">
+    <>
+      <main className="flex-1 overflow-auto">
         <div className="p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -843,6 +841,6 @@ export default function Productivity() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

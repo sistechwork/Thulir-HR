@@ -111,22 +111,20 @@ export default function TeamLeadDashboard() {
 
     if (error) {
         return (
-            <div className="flex h-screen">
-                <Sidebar />
-                <main className="flex-1 overflow-auto ml-64 p-8">
+            <>
+                <main className="flex-1 overflow-auto">
                     <div className="text-center py-12">
                         <h2 className="text-xl font-semibold text-red-600">Error Loading Dashboard</h2>
                         <p className="text-muted-foreground">{(error as Error).message}</p>
                     </div>
                 </main>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="flex h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto ml-64">
+        <>
+            <main className="flex-1 overflow-auto">
                 <div className="p-8">
                     {/* Header */}
                     <div className="mb-8">
@@ -373,6 +371,6 @@ export default function TeamLeadDashboard() {
                     )}
                 </div>
             </main>
-        </div>
+        </>
     );
 }

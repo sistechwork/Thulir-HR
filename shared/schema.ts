@@ -73,6 +73,7 @@ export const leads = pgTable("leads", {
   transactionNumber: text("transaction_number"),
   concession: decimal("concession", { precision: 10, scale: 2 }),
   category: text("category"),
+  program: text("program"), // PET or COURSE
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -336,6 +337,7 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   pendingAmount: z.string().nullable().optional(), // Will be parsed as decimal in backend
   partialAmount: z.string().nullable().optional(), // Will be parsed as decimal in backend
   totalAmount: z.string().nullable().optional(), // Will be parsed as decimal in backend
+  program: z.string().nullable().optional(),
 });
 
 export const insertLeadHistorySchema = createInsertSchema(leadHistory).omit({

@@ -5,8 +5,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function TechDocsPage() {
     return (
-        <div className="flex h-screen bg-[#F1F5F9]">
-            <Sidebar />
+        <>
             <main className="flex-1 p-8 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header Section */}
@@ -155,6 +154,6 @@ export default function TechDocsPage() {
                     </section>
                 </div>
             </main>
-        </div>
+        </>
     );
 }

@@ -196,19 +196,17 @@ export default function ClassStudentsPage() {
 
     if (isClassLoading || isStudentsLoading) {
         return (
-            <div className="flex h-screen bg-[#F8FAFC]">
-                <Sidebar />
-                <main className="flex-1 flex items-center justify-center ml-64">
+            <>
+                <main className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                 </main>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="flex h-screen bg-[#F8FAFC]">
-            <Sidebar />
-            <main className="flex-1 p-8 overflow-y-auto ml-64">
+        <>
+            <main className="flex-1 p-8 overflow-y-auto">
                 <div className="max-w-7xl mx-auto space-y-6">
                     {/* Back Button */}
                     <Button
@@ -596,6 +594,6 @@ export default function ClassStudentsPage() {
             <footer className="fixed bottom-0 left-0 right-0 py-4 bg-slate-900 text-white text-center text-xs font-medium z-10">
                 © {new Date().getFullYear()} Attendance Management System. All rights reserved.
             </footer>
-        </div>
+        </>
     );
 }

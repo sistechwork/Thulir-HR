@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import Sidebar from "@/components/Sidebar";
 import FloatingChatbot from "@/components/FloatingChatbot";
 import NotificationBell from "@/components/NotificationBell";
 import { KathaipomFeed } from "@/components/KathaipomFeed";
@@ -394,17 +393,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="landing-background min-h-screen flex relative bg-gradient-to-br from-[#11754c]/8 via-[#F9F9F9] to-[#04e284]/5 dark:from-[#11754c]/10 dark:via-[#0a0a0a] dark:to-[#04e284]/8">
-      {/* Decorative shapes */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/60 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/50 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/50 to-transparent skew-y-3 pointer-events-none"></div>
-
+    <>
       <FloatingChatbot />
-      <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-64">
+      <div className="flex-1 flex flex-col min-w-0">
         {user?.role === 'tech-support' || user?.role === 'admin' && getAdminSubRole() === 'tech_support' ? (
           <main className="flex-1 overflow-y-auto p-10">
             <TechSupportDashboard userDisplayName={user?.fullName || user?.username || "User"} />
@@ -534,7 +527,7 @@ export default function Dashboard() {
                     <Send className="w-5 h-5 text-primary" />
                     <h2 className="text-xl font-bold">Quick Actions</h2>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     <Link href="/classes">
                       <Card className="p-4 hover:shadow-green-md transition-all cursor-pointer border-blue-200 bg-blue-50/30 dark:bg-blue-900/10">
                         <div className="flex flex-col items-center text-center space-y-2">
@@ -576,7 +569,7 @@ export default function Dashboard() {
               )}
 
               {/* Metrics Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <MetricsCard
                   title={(user as any)?.role === "hr" || (user as any)?.role === "accounts" || (user as any)?.role === "session-coordinator" ? "My Leads" : "Total Leads"}
                   value={
@@ -1013,6 +1006,6 @@ export default function Dashboard() {
           onClose={() => setShowBulkUpload(false)}
         />
       )}
-    </div>
+    </>
   );
 }
