@@ -13,11 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Filter, Upload } from "lucide-react";
 import { getAdminSubRole } from "@/lib/adminRoleUtils";
 import BulkUploadModal from "@/components/BulkUploadModal";
+import ScreenshotUploadModal from "@/components/ScreenshotUploadModal";
+import { ImageIcon } from "lucide-react";
 
 export default function Leads() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showScreenshotUpload, setShowScreenshotUpload] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [filters, setFilters] = useState({
@@ -215,14 +218,24 @@ export default function Leads() {
 
               {/* Bulk Upload - Only for manager and admin */}
               {(user?.role === "manager" || user?.role === "admin") && (
-                <Button
-                  onClick={() => setShowBulkUpload(true)}
-                  className="bg-primary hover:bg-primary/90"
-                  data-testid="button-bulk-upload-leads"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Bulk Import
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setShowScreenshotUpload(true)}
+                    variant="outline"
+                    data-testid="button-screenshot-upload-leads"
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Screenshot OCR
+                  </Button>
+                  <Button
+                    onClick={() => setShowBulkUpload(true)}
+                    className="bg-primary hover:bg-primary/90"
+                    data-testid="button-bulk-upload-leads"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Bulk Import
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -246,6 +259,12 @@ export default function Leads() {
         <BulkUploadModal
           isOpen={showBulkUpload}
           onClose={() => setShowBulkUpload(false)}
+        />
+      )}
+      {showScreenshotUpload && (
+        <ScreenshotUploadModal
+          isOpen={showScreenshotUpload}
+          onClose={() => setShowScreenshotUpload(false)}
         />
       )}
       {showLeadDetails && selectedLead && (

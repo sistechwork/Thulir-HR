@@ -18,6 +18,9 @@ import nodemailer from "nodemailer";
 import { sendEmail } from "./email-service";
 import { format } from "date-fns";
 import crypto from 'crypto';
+import { execFile } from 'child_process';
+import util from 'util';
+import os from 'os';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -48,13 +51,14 @@ const imageUpload = multer({
     const allowedTypes = [
       'image/png',
       'image/jpeg',
-      'image/jpg'
+      'image/jpg',
+      'image/webp'
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PNG and JPG images are allowed.'));
+      cb(new Error('Invalid file type. Only PNG, JPG, and WEBP images are allowed.'));
     }
   }
 });
@@ -2933,6 +2937,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing upload:", error);
       res.status(500).json({ message: "Failed to process upload" });
+    }
+  });
+
+  // Extract data from screenshots
+  app.post('/api/leads/extract-screenshots', isAuthenticated, imageUpload.array('screenshots'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      const userRole = currentUser?.role || 'hr';
+
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: "No screenshots uploaded" });
+      }
+
+      const results: any[] = [];
+      const tempDir = os.tmpdir();
+      const tempFiles: { path: string, originalName: string }[] = [];
+      
+      for (const file of req.files) {
+        const tempFilePath = path.join(tempDir, `${Date.now()}_${file.originalname}`);
+        fs.writeFileSync(tempFilePath, file.buffer);
+        tempFiles.push({ path: tempFilePath, originalName: file.originalname });
+      }
+        
+      try {
+        const execFileAsync = util.promisify(execFile);
+        const pythonExec = path.join(process.cwd(), 'server', 'scripts', 'venv', 'Scripts', 'python.exe');
+        const scriptPath = path.join(process.cwd(), 'server', 'scripts', 'extract_resume.py');
+        
+        const args = [scriptPath, ...tempFiles.map(f => f.path)];
+        
+        const { stdout } = await execFileAsync(pythonExec, args, { maxBuffer: 1024 * 1024 * 50 }); // 50MB buffer
+        
+        // Python returns an array of results
+        const parsedResults = JSON.parse(stdout);
+        
+        // Map back original filenames
+        parsedResults.forEach((res: any, idx: number) => {
+           if (tempFiles[idx]) {
+               res.File = tempFiles[idx].originalName;
+           }
+        });
+        
+        res.json(parsedResults);
+      } catch (err: any) {
+        console.error('Error running OCR script:', err);
+        res.status(500).json({ message: "Failed to extract text via OCR" });
+      } finally {
+        // Clean up temp files
+        for (const file of tempFiles) {
+          try {
+            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+          } catch(e) {}
+        }
+      }
+    } catch (error) {
+      console.error("Error extracting screenshots:", error);
+      res.status(500).json({ message: "Failed to extract screenshots" });
+    }
+  });
+
+  // Bulk insert leads from JSON
+  app.post('/api/leads/bulk-insert-json', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      const userRole = currentUser?.role || 'hr';
+
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { leads, allocationStrategy, category = 'Client Hiring' } = req.body;
+      if (!Array.isArray(leads) || leads.length === 0) {
+        return res.status(400).json({ message: "No leads provided" });
+      }
+
+      const leadsToInsert: any[] = [];
+      let processedCount = 0;
+      let failedCount = 0;
+      const errors: any[] = [];
+
+      for (let i = 0; i < leads.length; i++) {
+        const row = leads[i];
+        try {
+          // Map JSON from frontend table to schema
+          const leadData = {
+            name: row.Name || 'Unknown',
+            email: row.Email && row.Email !== 'nil' ? row.Email : null,
+            phone: row.Phone && row.Phone !== 'nil' ? String(row.Phone) : null,
+            location: row.Location && row.Location !== 'nil' ? row.Location : null,
+            degree: row.Degree && row.Degree !== 'nil' ? row.Degree : null,
+            collegeName: row.College && row.College !== 'nil' ? row.College : null,
+            sourceManagerId: currentUser?.id,
+            status: 'new',
+            isActive: true,
+            category: category,
+            currentOwnerId: null // handled by allocation strategy if implemented elsewhere, or stays null
+          };
+          
+          const validatedLead = insertLeadSchema.parse(leadData);
+          leadsToInsert.push(validatedLead);
+          processedCount++;
+        } catch (error) {
+          failedCount++;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          errors.push({ row: i + 1, error: errorMessage });
+        }
+      }
+
+      if (leadsToInsert.length > 0) {
+        await storage.createLeadsBulk(leadsToInsert);
+      }
+
+      res.json({
+        totalRows: leads.length,
+        processedCount,
+        failedCount,
+        errors
+      });
+    } catch (error) {
+      console.error("Error in bulk insert json:", error);
+      res.status(500).json({ message: "Failed to insert leads" });
     }
   });
 

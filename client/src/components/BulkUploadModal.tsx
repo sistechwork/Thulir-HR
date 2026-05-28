@@ -197,21 +197,17 @@ export default function BulkUploadModal({ isOpen, onClose }: BulkUploadModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="bulk-upload-modal">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto" 
+        data-testid="bulk-upload-modal"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Upload className="mr-2 h-5 w-5" />
-              Bulk Lead Upload
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              data-testid="button-close-upload"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle className="flex items-center">
+            <Upload className="mr-2 h-5 w-5" />
+            Bulk Lead Upload
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Upload Excel file with lead data
