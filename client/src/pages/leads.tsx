@@ -171,25 +171,27 @@ export default function Leads() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               </div>
 
-              <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger className="w-40" data-testid="select-status-filter">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="register">Register</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="not_interested">Not Interested</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                </SelectContent>
-              </Select>
+              {(user as any)?.role !== 'hr' && (
+                <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+                  <SelectTrigger className="w-40" data-testid="select-status-filter">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="register">Register</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="not_interested">Not Interested</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
 
 
-              {/* HR filter - only show for managers/admins, not for accounts */}
-              {(user as any)?.role !== 'accounts' && (
+              {/* HR filter - only show for managers/admins/team_lead, not for accounts or hr */}
+              {(user as any)?.role !== 'accounts' && (user as any)?.role !== 'hr' && (
                 Array.isArray(hrUsers) ? (
                   <Select value={filters.hrId} onValueChange={(value) => handleFilterChange('hrId', value)}>
                     <SelectTrigger className="w-40" data-testid="select-hr-filter">
@@ -197,9 +199,9 @@ export default function Leads() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All HR</SelectItem>
-                      {hrUsers.filter(user => user && (user.id || user.userId)).map((user: any) => (
-                        <SelectItem key={user.id || user.userId} value={String(user.id || user.userId)}>
-                          {user.fullName || user.firstName || 'Unknown User'}
+                      {hrUsers.filter((hrUser: any) => hrUser && (hrUser.id || hrUser.userId) && ((user as any)?.role !== 'team_lead' || hrUser.teamLeadId === (user as any)?.id || String(hrUser.id || hrUser.userId) === String((user as any)?.id))).map((hrUser: any) => (
+                        <SelectItem key={hrUser.id || hrUser.userId} value={String(hrUser.id || hrUser.userId)}>
+                          {hrUser.fullName || hrUser.firstName || 'Unknown User'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -211,10 +213,7 @@ export default function Leads() {
                 )
               )}
 
-              <Button variant="secondary" data-testid="button-advanced-filter">
-                <Filter className="mr-2 h-4 w-4" />
-                Advanced Filter
-              </Button>
+
 
               {/* Bulk Upload - Only for manager and admin */}
               {(user?.role === "manager" || user?.role === "admin") && (

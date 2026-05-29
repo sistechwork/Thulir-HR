@@ -281,7 +281,10 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, read
       case 'completed':
         return 'status-completed';
       case 'not_interested':
+      case 'wrong_number':
         return 'status-not-interested';
+      case 'not_picking':
+        return 'status-not-picking';
       case 'pending':
       case 'accounts_pending':
         return 'status-pending';
@@ -305,19 +308,9 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, read
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="lead-details-modal">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center">
+          <DialogTitle className="flex items-center">
               <User className="mr-2 h-5 w-5" />
               Lead Details - {lead.name}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              data-testid="button-close-lead-details"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
           <div className="flex items-center space-x-2">
             <Badge className={`status-badge ${getStatusColor(lead.status)}`}>

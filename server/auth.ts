@@ -59,6 +59,20 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (session?.user?.loginType === 'password') {
     // Verify the user still exists and is active
     try {
+      // Allow hardcoded manager fallback to bypass database check
+      if (session.user.id === 'manager-123') {
+        (req as any).user = {
+          claims: {
+            sub: session.user.id,
+            email: session.user.email,
+          },
+          role: session.user.role.toLowerCase(),
+          loginType: 'password'
+        };
+        console.log(`[Auth Success] Hardcoded Fallback User ID: ${session.user.id}, Role: ${session.user.role}`);
+        return next();
+      }
+
       const dbUser = await storage.getUser(session.user.id);
       if (!dbUser || !dbUser.isActive) {
         delete session.user;

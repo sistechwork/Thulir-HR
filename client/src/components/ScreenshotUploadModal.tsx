@@ -220,9 +220,6 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent 
         className="max-w-5xl max-h-[90vh] overflow-y-auto"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center">

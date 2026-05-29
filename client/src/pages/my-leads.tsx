@@ -138,6 +138,8 @@ export default function MyLeadsPage() {
   const [editingLeadId, setEditingLeadId] = useState<number | null>(null);
   const [expandedLeadId, setExpandedLeadId] = useState<number | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [releaseLeadId, setReleaseLeadId] = useState<number | null>(null);
+  const [releaseReason, setReleaseReason] = useState<string>("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,7 +160,7 @@ export default function MyLeadsPage() {
       case "wrong_number":
         return "status-not-interested";
       case "not_picking":
-        return "status-not-interested";
+        return "status-not-picking";
       case "call_back":
         return "status-scheduled";
       default:
@@ -270,6 +272,31 @@ export default function MyLeadsPage() {
       toast({
         title: "Failed to Pass to Accounts",
         description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Release lead mutation for HR users
+  const releaseLeadMutation = useMutation({
+    mutationFn: async ({ leadId, reason }: { leadId: number; reason: string }) => {
+      const response = await apiRequest("POST", `/api/leads/${leadId}/release`, { releaseReason: reason });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Lead Released",
+        description: "The lead has been returned to Lead Management.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      setReleaseLeadId(null);
+      setReleaseReason("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Release Failed",
+        description: error.message || "Failed to release lead. Please try again.",
         variant: "destructive",
       });
     },
@@ -509,9 +536,15 @@ export default function MyLeadsPage() {
   const filteredLeads = leads.filter((lead: any) => {
     const matchesSearch =
       !searchTerm ||
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.phone.includes(searchTerm);
+      (lead.name && lead.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.email && lead.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.phone && lead.phone.includes(searchTerm)) ||
+      (lead.location && lead.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.degree && lead.degree.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.domain && lead.domain.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.collegeName && lead.collegeName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.yearOfPassing && lead.yearOfPassing.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.program && lead.program.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus =
       statusFilter === "all" ? (isSessOrgView ? lead.status === "ready_for_class" : true) : lead.status === statusFilter;
@@ -647,45 +680,47 @@ export default function MyLeadsPage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search leads by name, email, or phone..."
+                  placeholder="Search leads by name, email, phone, location, degree..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                   data-testid="input-search-leads"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger
-                  className="w-full sm:w-48"
-                  data-testid="select-status-filter"
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isSessOrgView ? (
-                    <>
-                      <SelectItem value="all">All Status (Ready for Class)</SelectItem>
-                      <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                    </>
-                  ) : (
-                    <>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="register">Register</SelectItem>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="not_interested">
-                        Not Interested
-                      </SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="ready_for_class">
-                        Ready for Class
-                      </SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
+              {user?.role !== 'hr' && (
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger
+                    className="w-full sm:w-48"
+                    data-testid="select-status-filter"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isSessOrgView ? (
+                      <>
+                        <SelectItem value="all">All Status (Ready for Class)</SelectItem>
+                        <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="register">Register</SelectItem>
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="not_interested">
+                          Not Interested
+                        </SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="ready_for_class">
+                          Ready for Class
+                        </SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
 
@@ -1531,29 +1566,20 @@ export default function MyLeadsPage() {
                           {scheduleSessionMutation.isPending ? "Scheduling..." : "Schedule Session"}
                         </Button>
                       )}
-                      {/* Delete button - only for HR users */}
+                      {/* Delete / Release button - only for HR users */}
                       {user?.role === "hr" && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (
-                              window.confirm(
-                                `Are you sure you want to delete lead "${lead.name}"? This action cannot be undone.`,
-                              )
-                            ) {
-                              deleteLeadMutation.mutate(lead.id);
-                            }
+                            setReleaseLeadId(lead.id);
                           }}
-                          disabled={deleteLeadMutation.isPending}
                           className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                          data-testid={`button-delete-${lead.id}`}
+                          data-testid={`button-release-${lead.id}`}
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
-                          {deleteLeadMutation.isPending
-                            ? "Deleting..."
-                            : "Delete"}
+                          Release
                         </Button>
                       )}
                     </div>
@@ -2625,6 +2651,39 @@ export default function MyLeadsPage() {
                 </DialogFooter>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={releaseLeadId !== null} onOpenChange={(open) => !open && setReleaseLeadId(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Release Lead</DialogTitle>
+              <DialogDescription>
+                Please select a reason for releasing this lead. The lead will be returned to the Lead Management pool.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <label className="text-sm font-medium mb-2 block">Release Reason</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={releaseReason}
+                onChange={(e) => setReleaseReason(e.target.value)}
+              >
+                <option value="" disabled>Select a reason...</option>
+                <option value="wrong_number">Wrong Number</option>
+                <option value="not_interested">Not Interested</option>
+                <option value="not_picking">Not Picking</option>
+              </select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReleaseLeadId(null)}>Cancel</Button>
+              <Button 
+                variant="destructive" 
+                disabled={!releaseReason || releaseLeadMutation.isPending}
+                onClick={() => releaseLeadId && releaseLeadMutation.mutate({ leadId: releaseLeadId, reason: releaseReason })}
+              >
+                {releaseLeadMutation.isPending ? "Releasing..." : "Release Lead"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         <FloatingChatbot />

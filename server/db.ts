@@ -54,6 +54,7 @@ if (!process.env.DATABASE_URL) {
           walkin_time time,
           timing text,
           current_owner_id text,
+          last_owner_id text,
           source_manager_id text,
           status text NOT NULL DEFAULT 'new',
           is_active boolean DEFAULT true,
@@ -67,6 +68,7 @@ if (!process.env.DATABASE_URL) {
           transaction_number text,
           concession decimal,
           category text,
+          program text,
           created_at timestamp DEFAULT CURRENT_TIMESTAMP,
           updated_at timestamp DEFAULT CURRENT_TIMESTAMP
         )`,
@@ -152,6 +154,8 @@ if (!process.env.DATABASE_URL) {
           id SERIAL PRIMARY KEY,
           name text NOT NULL,
           subject text,
+          mentor_email text,
+          mode text,
           instructor_id text NOT NULL REFERENCES users(id),
           created_at timestamp DEFAULT CURRENT_TIMESTAMP
         )`,
@@ -161,6 +165,43 @@ if (!process.env.DATABASE_URL) {
           lead_id integer NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
           student_id text,
           joined_at timestamp DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS post_dislikes (
+          id SERIAL PRIMARY KEY,
+          post_id integer NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+          user_id text NOT NULL,
+          created_at timestamp DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS attendance (
+          id SERIAL PRIMARY KEY,
+          class_id integer NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          lead_id integer NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+          date date NOT NULL,
+          status text NOT NULL,
+          created_at timestamp DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS marks (
+          id SERIAL PRIMARY KEY,
+          class_id integer NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          lead_id integer NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+          assessment1 integer DEFAULT 0,
+          assessment2 integer DEFAULT 0,
+          task integer DEFAULT 0,
+          project integer DEFAULT 0,
+          final_validation integer DEFAULT 0,
+          total integer DEFAULT 0,
+          created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+          updated_at timestamp DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS email_config (
+          id SERIAL PRIMARY KEY,
+          user_id text UNIQUE REFERENCES users(id),
+          smtp_email text NOT NULL,
+          app_password text NOT NULL,
+          smtp_server text NOT NULL,
+          smtp_port integer NOT NULL DEFAULT 587,
+          is_enabled boolean DEFAULT true,
+          updated_at timestamp DEFAULT CURRENT_TIMESTAMP
         )`
       ];
 

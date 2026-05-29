@@ -119,21 +119,42 @@ async function initializeManagerUser() {
 
     if (!existingManager) {
       console.log(`[Init] Manager not found, creating user...`);
-      // Create new manager user
+      // Create new manager user with stable ID
       const hashedPassword = await bcrypt.hash(managerPassword, 10);
       const managerUser = await storage.createUser({
-        id: Math.random().toString(36).substring(2, 15),
+        id: 'manager-123',
         email: managerEmail,
-        firstName: "Manager",
-        lastName: "Admin",
-        fullName: "Manager Admin",
+        firstName: "VCodez",
+        lastName: "Manager",
+        fullName: "VCodez Manager",
         passwordHash: hashedPassword,
         role: "manager",
         isActive: true,
       });
-      console.log(`[Init] Manager user created successfully: ${managerUser.email}`);
+      console.log(`[Init] Manager user created successfully: ${managerUser.email} (ID: manager-123)`);
+    } else if (existingManager.id !== 'manager-123') {
+      // Manager exists but with a different (random) ID - fix it
+      console.log(`[Init] Manager exists with mismatched ID: ${existingManager.id}, fixing to manager-123...`);
+      try {
+        // Delete the old user and recreate with stable ID
+        await db.execute(sql`DELETE FROM users WHERE email = ${managerEmail}`);
+        const hashedPassword = await bcrypt.hash(managerPassword, 10);
+        await storage.createUser({
+          id: 'manager-123',
+          email: managerEmail,
+          firstName: "VCodez",
+          lastName: "Manager",
+          fullName: "VCodez Manager",
+          passwordHash: hashedPassword,
+          role: "manager",
+          isActive: true,
+        });
+        console.log(`[Init] Manager user recreated with stable ID: manager-123`);
+      } catch (fixErr: any) {
+        console.error('[Init] Error fixing manager ID:', fixErr.message);
+      }
     } else {
-      console.log(`[Init] Manager user already exists: ${existingManager.email}`);
+      console.log(`[Init] Manager user already exists: ${existingManager.email} (ID: ${existingManager.id})`);
       // Update existing manager user's password if needed
       const isPasswordValid = await bcrypt.compare(managerPassword, existingManager.passwordHash || '');
       if (!isPasswordValid) {

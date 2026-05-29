@@ -153,19 +153,21 @@ export default function Users() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
-                User Management
+                {user?.role === "team_lead" ? "My Team" : "User Management"}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Manage system users and their roles
+                {user?.role === "team_lead" ? "Monitor your team members and their performance" : "Manage system users and their roles"}
               </p>
             </div>
-            <Button
-              onClick={() => setShowCreateUser(true)}
-              data-testid="button-create-user"
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Create User
-            </Button>
+            {(user?.role === "manager" || user?.role === "admin") && (
+              <Button
+                onClick={() => setShowCreateUser(true)}
+                data-testid="button-create-user"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create User
+              </Button>
+            )}
           </div>
         </header>
 
@@ -191,16 +193,18 @@ export default function Users() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Username</TableHead>
+                      <TableHead>Team</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      {(user?.role === "manager" || user?.role === "admin") && (
+                        <TableHead className="text-right">Actions</TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {usersLoading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={user?.role === "manager" || user?.role === "admin" ? 6 : 5} className="text-center py-8">
                           <div className="flex items-center justify-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           </div>
@@ -211,10 +215,14 @@ export default function Users() {
                         <TableRow key={u.id} data-testid={`row-user-${u.id}`}>
                           <TableCell className="font-medium">{u.fullName}</TableCell>
                           <TableCell>{u.email}</TableCell>
-                          <TableCell>{u.username}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="font-normal">
+                              {u.teamName || "Individual"}
+                            </Badge>
+                          </TableCell>
                           <TableCell>
                             <Badge variant={getRoleBadgeVariant(u.role)}>
-                              {u.role}
+                              {getRoleDisplayName(u.role)}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -222,34 +230,36 @@ export default function Users() {
                               {u.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            {u.role !== "manager" && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setUserToEdit(u)}
-                                  title="Edit user credentials"
-                                  data-testid={`button-edit-user-${u.id}`}
-                                >
-                                  <Edit className="h-4 w-4 text-blue-600" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setUserToDelete(u)}
-                                  data-testid={`button-delete-user-${u.id}`}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </>
-                            )}
-                          </TableCell>
+                          {(user?.role === "manager" || user?.role === "admin") && (
+                            <TableCell className="text-right space-x-2">
+                              {u.role !== "manager" && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setUserToEdit(u)}
+                                    title="Edit user credentials"
+                                    data-testid={`button-edit-user-${u.id}`}
+                                  >
+                                    <Edit className="h-4 w-4 text-blue-600" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setUserToDelete(u)}
+                                    data-testid={`button-delete-user-${u.id}`}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              )}
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={user?.role === "manager" || user?.role === "admin" ? 6 : 5} className="text-center py-8 text-muted-foreground">
                           No users found
                         </TableCell>
                       </TableRow>

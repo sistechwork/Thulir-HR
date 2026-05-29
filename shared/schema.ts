@@ -57,6 +57,7 @@ export const leads = pgTable("leads", {
   walkinTime: time("walkin_time"),
   timing: text("timing"),
   currentOwnerId: varchar("current_owner_id").references(() => users.id),
+  lastOwnerId: varchar("last_owner_id").references(() => users.id),
   sourceManagerId: varchar("source_manager_id").references(() => users.id),
   status: text("status").notNull().default('new'),
   isActive: boolean("is_active").default(true),

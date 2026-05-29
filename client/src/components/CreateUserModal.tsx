@@ -30,7 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { UserPlus, X, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Eye, EyeOff } from "lucide-react";
 import CelebrationPopup from "@/components/CelebrationPopup";
 
 interface CreateUserModalProps {
@@ -121,7 +121,9 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess, editingUse
     queryKey: ["/api/users", { role: "team_lead" }],
     queryFn: async () => {
       const response = await fetch("/api/users?role=team_lead", { credentials: "include" });
-      return response.json();
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
     enabled: isOpen,
   });
@@ -219,19 +221,9 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess, editingUse
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" data-testid="create-user-modal">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center">
-                <UserPlus className="mr-2 h-5 w-5" />
-                {isEditMode ? "Edit User" : "Create New User"}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                data-testid="button-close-create-user"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+            <DialogTitle className="flex items-center">
+              <UserPlus className="mr-2 h-5 w-5" />
+              {isEditMode ? "Edit User" : "Create New User"}
             </DialogTitle>
           </DialogHeader>
 
@@ -322,29 +314,43 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess, editingUse
                   />
                 )}
 
-                {selectedRole === "hr" && teamLeads && teamLeads.length > 0 && (
+                {selectedRole === "hr" && (
                   <FormField
                     control={form.control}
-                    name="teamLeadId"
+                    name="teamName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Assign to Team Lead</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel>Team</FormLabel>
+                        <Select onValueChange={(value) => {
+                          field.onChange(value);
+                          // Also set the teamLeadId from the matching team lead
+                          if (value === "Individual") {
+                            form.setValue("teamLeadId", "");
+                          } else if (Array.isArray(teamLeads)) {
+                            const matchingLead = teamLeads.find((tl: any) => tl.teamName === value);
+                            if (matchingLead) {
+                              form.setValue("teamLeadId", matchingLead.id);
+                            }
+                          }
+                        }} value={field.value || "Individual"}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-team-lead">
-                              <SelectValue placeholder="Select a Team Lead" />
+                            <SelectTrigger data-testid="select-team-name">
+                              <SelectValue placeholder="Select a team" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {teamLeads.map((tl: any) => (
-                              <SelectItem key={tl.id} value={tl.id}>
-                                {tl.fullName} - {tl.teamName}
+                            <SelectItem value="Individual">Individual (No Team)</SelectItem>
+                            {Array.isArray(teamLeads) && teamLeads
+                              .filter((tl: any) => tl.teamName && tl.teamName.trim())
+                              .map((tl: any) => (
+                              <SelectItem key={tl.id} value={tl.teamName}>
+                                {tl.teamName} — Led by {tl.fullName || tl.email || 'Unknown'}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          Optional: Assign this HR to a Team Lead
+                          Assign this HR to a team or keep as Individual
                         </p>
                         <FormMessage />
                       </FormItem>

@@ -109,7 +109,10 @@ export default function LeadTable({
       case 'completed':
         return 'status-completed';
       case 'not_interested':
+      case 'wrong_number':
         return 'status-not-interested';
+      case 'not_picking':
+        return 'status-not-picking';
       case 'pending':
         return 'status-pending';
       case 'ready_for_class':
@@ -216,7 +219,9 @@ export default function LeadTable({
               <TableHead>Contact</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Degree</TableHead>
-              <TableHead>Current Owner</TableHead>
+              {((user as any)?.role === 'manager' || (user as any)?.role === 'admin' || (user as any)?.role === 'team_lead') && (
+                <TableHead>Owner / Last Owner</TableHead>
+              )}
               <TableHead className="text-right">Registration Amount</TableHead>
               <TableHead className="text-right">Partial Amount</TableHead>
               <TableHead className="text-right">Concession</TableHead>
@@ -227,8 +232,19 @@ export default function LeadTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.leads.map((lead) => (
-              <TableRow key={lead.id} data-testid={`lead-row-${lead.id}`}>
+            {data.leads.map((lead) => {
+              let rowColorClass = "";
+              if (lead.status === 'wrong_number' || lead.status === 'not_interested') {
+                rowColorClass = "bg-red-50 dark:bg-red-900/20";
+              } else if (lead.status === 'not_picking') {
+                rowColorClass = "bg-yellow-50 dark:bg-yellow-900/20";
+              }
+
+              const isManagerOrAdminOrTeamLead = (user as any)?.role === 'manager' || (user as any)?.role === 'admin' || (user as any)?.role === 'team_lead';
+              const isManagerOrAdmin = (user as any)?.role === 'manager' || (user as any)?.role === 'admin';
+
+              return (
+              <TableRow key={lead.id} data-testid={`lead-row-${lead.id}`} className={rowColorClass}>
                 <TableCell>
                   <Checkbox
                     checked={selectedLeads.includes(lead.id)}
@@ -247,30 +263,45 @@ export default function LeadTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>
-                    <p className="text-sm">{lead.email}</p>
-                    <p className="text-xs text-muted-foreground">{lead.phone}</p>
+                  <div className={!isManagerOrAdmin ? "filter blur-sm select-none" : ""}>
+                    <p className="text-sm">{lead.email || '—'}</p>
+                    <p className="text-xs text-muted-foreground">{lead.phone || '—'}</p>
                   </div>
                 </TableCell>
                 <TableCell>{lead.location}</TableCell>
                 <TableCell>{lead.degree}</TableCell>
-                <TableCell>
-                  {lead.currentOwner ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-primary-foreground text-xs">
-                          {getUserInitials(lead.currentOwner)}
+                {isManagerOrAdminOrTeamLead && (
+                  <TableCell>
+                    {lead.currentOwner ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">
+                            {getUserInitials(lead.currentOwner)}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {lead.currentOwner.fullName || 
+                           `${lead.currentOwner.firstName} ${lead.currentOwner.lastName}`.trim()}
                         </span>
                       </div>
-                      <span className="text-sm">
-                        {lead.currentOwner.fullName || 
-                         `${lead.currentOwner.firstName} ${lead.currentOwner.lastName}`.trim()}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">Unassigned</span>
-                  )}
-                </TableCell>
+                    ) : lead.lastOwner ? (
+                      <div className="flex items-center space-x-2 opacity-70">
+                        <div className="w-6 h-6 bg-muted-foreground rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">
+                            {getUserInitials(lead.lastOwner)}
+                          </span>
+                        </div>
+                        <span className="text-sm italic">
+                          {lead.lastOwner.fullName || 
+                           `${lead.lastOwner.firstName} ${lead.lastOwner.lastName}`.trim()}
+                          <br/><span className="text-[10px]">({lead.status})</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">Unassigned</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell className="text-right font-medium" data-testid={`registration-amount-${lead.id}`}>
                   {lead.registrationAmount ? `₹${parseFloat(lead.registrationAmount).toFixed(2)}` : '—'}
                 </TableCell>
@@ -319,18 +350,22 @@ export default function LeadTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onViewLead(lead)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Lead
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <History className="mr-2 h-4 w-4" />
-                        View History
-                      </DropdownMenuItem>
+                      {isManagerOrAdmin && (
+                        <>
+                          <DropdownMenuItem onClick={() => onViewLead(lead)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Lead
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <History className="mr-2 h-4 w-4" />
+                            View History
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       {/* Delete Lead - only for managers and admins */}
                       {((user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
                         <DropdownMenuItem 
@@ -362,7 +397,7 @@ export default function LeadTable({
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </div>
