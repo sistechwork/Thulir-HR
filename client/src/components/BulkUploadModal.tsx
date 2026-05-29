@@ -58,8 +58,8 @@ export default function BulkUploadModal({ isOpen, onClose }: BulkUploadModalProp
     onSuccess: (data: UploadResult) => {
       setUploadResult(data);
       setUploadProgress(100);
+      queryClient.invalidateQueries({ queryKey: ["/api/temp-leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
       toast({
         title: "Upload Successful",
         description: `Processed ${data.processedCount} leads successfully`,
@@ -400,7 +400,7 @@ export default function BulkUploadModal({ isOpen, onClose }: BulkUploadModalProp
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Leads
+                    Upload to Temporary Database
                   </>
                 )}
               </Button>

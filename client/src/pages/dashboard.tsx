@@ -17,7 +17,7 @@ import {
   Users,
   Clock,
   CheckCircle,
-  DollarSign,
+  IndianRupee,
   Upload,
   Search,
   Send,
@@ -278,12 +278,10 @@ export default function Dashboard() {
     "register",
     "scheduled",
     "completed",
-    "not_interested",
     "pending",
     "ready_for_class",
-    "wrong_number",
-    "not_picking",
     "call_back",
+    "dropped",
   ];
 
   // Calculate role-specific status distribution for pie chart
@@ -373,11 +371,11 @@ export default function Dashboard() {
       .slice(0, 10);
   }, [metrics?.hrPerformance]);
 
-  // Format amount to display (e.g., 128000 -> "128K")
+  // Format amount to display (e.g., 128000 -> "₹128K")
   const formatRevenueDisplay = (amount: number) => {
-    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
-    return `${amount.toFixed(0)}`;
+    if (amount >= 1000000) return `₹${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
+    return `₹${amount.toFixed(0)}`;
   };
 
   if (isLoading) {
@@ -610,7 +608,7 @@ export default function Dashboard() {
                   <MetricsCard
                     title="Revenue Pipeline"
                     value={formatRevenueDisplay(metrics?.revenue || 0)}
-                    icon={DollarSign}
+                    icon={IndianRupee}
                     change="All Categories"
                     changeLabel="total collected"
                     loading={metricsLoading}

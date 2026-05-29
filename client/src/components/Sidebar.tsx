@@ -23,7 +23,8 @@ import {
   BookCheck,
   CalendarSearch,
   BookOpen,
-  Mail
+  Mail,
+  Upload
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -35,6 +36,7 @@ export default function Sidebar() {
   const [mySessionsExpanded, setMySessionsExpanded] = useState(false);
   const [myTechSupportClassesExpanded, setMyTechSupportClassesExpanded] = useState(false);
   const [myCompletionExpanded, setMyCompletionExpanded] = useState(false);
+  const [myDropsExpanded, setMyDropsExpanded] = useState(false);
   const isSessOrg = isSessionOrganizer((user as any)?.role);
   const currentAdminSubRole = getAdminSubRole();
 
@@ -141,6 +143,24 @@ export default function Sidebar() {
     retry: false,
   });
 
+  const { data: myDropsData } = useQuery({
+    queryKey: ["/api/my/drops", { limit: 5 }, currentAdminSubRole],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("limit", "5");
+
+      if (currentAdminSubRole) {
+        params.append("adminSubRole", currentAdminSubRole);
+      }
+
+      const response = await fetch(`/api/my/drops?${params}`, { credentials: "include" });
+      if (!response.ok) return { leads: [], total: 0 };
+      return response.json();
+    },
+    enabled: (user as any)?.role === 'hr' || (user as any)?.role === 'manager' || (user as any)?.role === 'admin',
+    retry: false,
+  });
+
   // Fetch allocated students count
   const { data: allocatedCountData } = useQuery({
     queryKey: ["/api/students/allocated/count"],
@@ -194,6 +214,13 @@ export default function Sidebar() {
       current: location === "/allocated-students",
       roleRequired: ["admin", "session-coordinator"],
       count: (allocatedCountData as any)?.count
+    },
+    {
+      name: "Upload Data Management",
+      href: "/upload-data",
+      icon: Upload,
+      current: location === "/upload-data",
+      roleRequired: ["admin", "manager"],
     },
     {
       name: "User Management",
@@ -643,6 +670,64 @@ export default function Sidebar() {
                 ) : (
                   <p className="px-2 py-1 text-xs text-gray-800">
                     No completed leads yet
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* My Drops section for HR, Manager, and Admin users */}
+        {((user as any)?.role === 'hr' || (user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+          <div className="mt-4">
+            <button
+              onClick={() => setMyDropsExpanded(!myDropsExpanded)}
+              className="w-full flex items-center justify-between p-2 text-sm text-gray-800 hover:text-black hover:bg-accent rounded-md transition-colors"
+              data-testid="button-my-drops-toggle"
+            >
+              <div className="flex items-center">
+                <History className="w-4 h-4 mr-2" />
+                <span>My Drops</span>
+                {(myDropsData as any)?.total > 0 && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {(myDropsData as any).total}
+                  </Badge>
+                )}
+              </div>
+              {myDropsExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+
+            {myDropsExpanded && (
+              <div className="mt-2 space-y-1 pl-6">
+                {(myDropsData as any)?.leads?.length > 0 ? (
+                  <>
+                    {(myDropsData as any).leads.slice(0, 3).map((lead: any) => (
+                      <Link
+                        key={lead.id}
+                        href={`/my-drops`}
+                        className="block px-2 py-1 text-xs text-gray-800 hover:text-black hover:bg-accent rounded transition-colors truncate"
+                        data-testid={`link-my-drops-${lead.id}`}
+                      >
+                        {lead.name} • {lead.status.replace('_', ' ')}
+                      </Link>
+                    ))}
+                    {(myDropsData as any).total > 3 && (
+                      <Link
+                        href="/my-drops"
+                        className="block px-2 py-1 text-xs text-primary hover:text-primary/80 rounded transition-colors"
+                        data-testid="link-view-all-my-drops"
+                      >
+                        View all {(myDropsData as any).total} dropped →
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <p className="px-2 py-1 text-xs text-gray-800">
+                    No dropped leads
                   </p>
                 )}
               </div>

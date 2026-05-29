@@ -80,18 +80,29 @@ const statusOptions = [
   { value: 'new', label: 'New' },
   { value: 'register', label: 'Register' },
   { value: 'scheduled', label: 'Scheduled' },
-  { value: 'not_interested', label: 'Not Interested' },
-  { value: 'not_available', label: 'Not Available' },
-  { value: 'no_show', label: 'No Show' },
   { value: 'completed', label: 'Completed' },
-  { value: 'reschedule', label: 'Reschedule' },
   { value: 'pending', label: 'Pending' },
   { value: 'ready_for_class', label: 'Ready for Class' },
-  { value: 'pending_but_ready', label: 'Pending but Ready' },
-  { value: 'wrong_number', label: 'Wrong Number' },
-  { value: 'not_picking', label: 'Not Picking' },
   { value: 'call_back', label: 'Call Back' },
+  { value: 'dropped', label: 'Dropped' },
 ];
+
+// Get allowed status options based on current status
+const getAllowedStatuses = (currentStatus: string) => {
+  switch (currentStatus) {
+    case 'new':
+      // From new, can go to any status except back to new is handled by backend
+      return statusOptions.filter(s => s.value !== 'new' || currentStatus === 'new');
+    case 'register':
+      // From register, can only go to completed, pending, ready_for_class, dropped
+      return statusOptions.filter(s => 
+        ['register', 'completed', 'pending', 'ready_for_class', 'dropped'].includes(s.value)
+      );
+    default:
+      // For all other statuses, cannot go back to 'new'
+      return statusOptions.filter(s => s.value !== 'new');
+  }
+};
 
 export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, readOnly = false }: LeadDetailsModalProps) {
   const { toast } = useToast();
@@ -276,20 +287,21 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, read
     switch (status) {
       case 'new':
         return 'status-new';
+      case 'register':
+        return 'status-ready-for-class';
       case 'scheduled':
         return 'status-scheduled';
       case 'completed':
         return 'status-completed';
-      case 'not_interested':
-      case 'wrong_number':
-        return 'status-not-interested';
-      case 'not_picking':
-        return 'status-not-picking';
       case 'pending':
       case 'accounts_pending':
         return 'status-pending';
       case 'ready_for_class':
         return 'status-ready-for-class';
+      case 'call_back':
+        return 'status-scheduled';
+      case 'dropped':
+        return 'status-not-interested';
       default:
         return 'status-new';
     }
@@ -420,7 +432,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, read
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {statusOptions.map((option) => (
+                              {getAllowedStatuses(lead.status).map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                   {option.label}
                                 </SelectItem>

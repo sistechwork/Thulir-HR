@@ -54,6 +54,11 @@ export default function LeadTable({
       const response = await apiRequest("POST", `/api/leads/${leadId}/assign`, {
         reason: "Self-assigned from Lead Management"
       });
+      if (!response.ok) {
+        const err: any = new Error("Failed to claim lead");
+        err.response = response;
+        throw err;
+      }
       return response.json();
     },
     onSuccess: (data) => {
@@ -66,10 +71,18 @@ export default function LeadTable({
       queryClient.invalidateQueries({ queryKey: ["/api/my/leads"] });
       onRefresh();
     },
-    onError: (error: Error) => {
+    onError: async (error: any) => {
+      // Check if it's a 429 rate limit (new lead limit exceeded)
+      let errorMessage = error.message || "An error occurred while claiming the lead.";
+      try {
+        if (error.response) {
+          const data = await error.response.json();
+          errorMessage = data.message || errorMessage;
+        }
+      } catch {}
       toast({
         title: "Failed to Claim Lead",
-        description: error.message || "An error occurred while claiming the lead.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -104,19 +117,20 @@ export default function LeadTable({
     switch (status) {
       case 'new':
         return 'status-new';
+      case 'register':
+        return 'status-scheduled';
       case 'scheduled':
         return 'status-scheduled';
       case 'completed':
         return 'status-completed';
-      case 'not_interested':
-      case 'wrong_number':
-        return 'status-not-interested';
-      case 'not_picking':
-        return 'status-not-picking';
       case 'pending':
         return 'status-pending';
       case 'ready_for_class':
         return 'status-ready-for-class';
+      case 'call_back':
+        return 'status-pending';
+      case 'dropped':
+        return 'status-not-interested';
       default:
         return 'status-new';
     }
@@ -234,10 +248,8 @@ export default function LeadTable({
           <TableBody>
             {data.leads.map((lead) => {
               let rowColorClass = "";
-              if (lead.status === 'wrong_number' || lead.status === 'not_interested') {
+              if (lead.status === 'dropped') {
                 rowColorClass = "bg-red-50 dark:bg-red-900/20";
-              } else if (lead.status === 'not_picking') {
-                rowColorClass = "bg-yellow-50 dark:bg-yellow-900/20";
               }
 
               const isManagerOrAdminOrTeamLead = (user as any)?.role === 'manager' || (user as any)?.role === 'admin' || (user as any)?.role === 'team_lead';

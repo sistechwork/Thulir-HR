@@ -38,7 +38,6 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [extractedData, setExtractedData] = useState<ExtractedLead[] | null>(null);
-  const [allocationStrategy, setAllocationStrategy] = useState<string>("shared-pool");
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -92,7 +91,6 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
       
       const payload = {
         leads: extractedData,
-        allocationStrategy,
         category: 'Client Hiring'
       };
 
@@ -111,8 +109,8 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
       return response.json();
     },
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/temp-leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metrics"] });
       toast({
         title: "Save Successful",
         description: `Added ${result.processedCount} leads to the database`,
@@ -381,37 +379,7 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
                 </table>
               </div>
 
-              {/* Allocation Strategy */}
-              <div className="space-y-3 pt-4 border-t border-border mt-4">
-                <Label className="text-sm font-medium">Allocation Strategy</Label>
-                <RadioGroup
-                  value={allocationStrategy}
-                  onValueChange={setAllocationStrategy}
-                  className="space-y-3"
-                >
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value="round-robin" id="round-robin" className="mt-1" />
-                    <Label htmlFor="round-robin" className="cursor-pointer space-y-1">
-                      <div className="font-medium">Round Robin</div>
-                      <div className="text-sm text-muted-foreground">Distribute leads evenly among HR personnel</div>
-                    </Label>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value="shared-pool" id="shared-pool" className="mt-1" />
-                    <Label htmlFor="shared-pool" className="cursor-pointer space-y-1">
-                      <div className="font-medium">Shared Pool</div>
-                      <div className="text-sm text-muted-foreground">HR personnel pick leads from common pool</div>
-                    </Label>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value="manual" id="manual" className="mt-1" />
-                    <Label htmlFor="manual" className="cursor-pointer space-y-1">
-                      <div className="font-medium">Manual Assignment</div>
-                      <div className="text-sm text-muted-foreground">Manually assign leads after upload</div>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
+
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-border">
@@ -420,7 +388,7 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
                   onClick={() => pushMutation.mutate()}
                   disabled={pushMutation.isPending}
                 >
-                  {pushMutation.isPending ? "Saving..." : "Push to Database"}
+                  {pushMutation.isPending ? "Saving..." : "Push to Temporary Database"}
                 </Button>
               </div>
             </div>

@@ -5,7 +5,7 @@ import { storage, db, leads, leadHistory, users, posts, postLikes, postComments,
 import { setupAuth, isAuthenticated, getSession } from "./auth";
 import { hlsStreamer } from "./streaming";
 import { z } from "zod";
-import { insertLeadSchema, insertUserSchema, insertLeadHistorySchema, insertClassSchema, insertClassStudentSchema, insertAttendanceSchema, insertMarksSchema } from "@shared/schema";
+import { insertLeadSchema, insertUserSchema, insertLeadHistorySchema, insertClassSchema, insertClassStudentSchema, insertAttendanceSchema, insertMarksSchema, insertTempLeadSchema } from "@shared/schema";
 import multer from "multer";
 import xlsx from "xlsx";
 import * as bcrypt from "bcrypt";
@@ -468,6 +468,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (userRole === 'hr' || userRole === 'tech-support') {
         filters.unassigned = true;
+        // Fetch current user to determine visibility scope for assigned leads
+        const currentUser = await storage.getUser(userId);
+        if (currentUser) {
+          filters.assignedUserId = userId;
+          filters.assignedTeamId = currentUser.teamLeadId || null;
+        }
       } else if (userRole === 'accounts' || userRole === 'session-coordinator') {
         filters.status = 'accounts_pending';
       } else if (userRole === 'manager' || userRole === 'admin') {
@@ -486,6 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teamMemberIds.push(userId); // Include the team lead themselves
         
         filters.teamMemberIds = teamMemberIds;
+        filters.ownerId = userId; // To allow visibility of unassigned leads for their team
         if (status) filters.status = status as string;
       }
 
@@ -529,7 +536,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.walkinDate !== undefined) updateData.walkinDate = req.body.walkinDate || null;
       if (req.body.walkinTime !== undefined) updateData.walkinTime = req.body.walkinTime || null;
       if (req.body.timing !== undefined) updateData.timing = req.body.timing || null;
-      if (req.body.status !== undefined) updateData.status = req.body.status;
+      if (req.body.status !== undefined) {
+        const newStatus = req.body.status;
+        const oldStatus = currentLead.status;
+
+        // Restriction 1: Cannot go back to 'new' from any other status
+        if (newStatus === 'new' && oldStatus !== 'new') {
+          return res.status(400).json({ message: "Cannot change status back to 'new' once it has been updated." });
+        }
+
+        // Restriction 2: If register, next status must be completed, pending, ready_for_class, or dropped
+        if (oldStatus === 'register' && newStatus !== 'register') {
+          const allowedAfterRegister = ['completed', 'pending', 'ready_for_class', 'dropped'];
+          if (!allowedAfterRegister.includes(newStatus)) {
+            return res.status(400).json({ 
+              message: "From 'register', status can only be changed to 'completed', 'pending', 'ready_for_class', or 'dropped'." 
+            });
+          }
+        }
+        
+        updateData.status = newStatus;
+      }
       if (req.body.notes !== undefined) updateData.notes = req.body.notes || null;
       if (req.body.yearOfPassing !== undefined) updateData.yearOfPassing = req.body.yearOfPassing || null;
       if (req.body.collegeName !== undefined) updateData.collegeName = req.body.collegeName || null;
@@ -764,6 +791,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reason = req.body.reason || 'Self-assigned';
 
       console.log(`[/api/leads/${leadId}/assign] HR user ${userId} claiming lead`);
+
+      // Check 15 new lead limit for HR users
+      const currentUser = await storage.getUser(userId);
+      if (currentUser?.role === 'hr') {
+        const newLeadCount = await storage.countNewLeadsByOwner(userId);
+        if (newLeadCount >= 15) {
+          return res.status(429).json({ 
+            message: "You have exceeded your individual limit of 15 new leads. Please update the status of your existing leads before adding more.",
+            currentCount: newLeadCount,
+            limit: 15
+          });
+        }
+      }
 
       // Assign the lead to the current user
       const updatedLead = await storage.assignLead(leadId, userId, userId, reason);
@@ -1097,6 +1137,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ message: 'Failed to fetch completed leads', error: error.message });
+    }
+  });
+
+  // Get my dropped leads
+  app.get('/api/my/drops', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { search, page = 1, limit = 20 } = req.query;
+
+      const filters = {
+        hrFilterId: userId,
+        status: 'dropped',
+        search: search as string,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      };
+
+      const result = await storage.searchLeads(filters);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to fetch dropped leads', error: error.message });
+    }
+  });
+
+  // Get HR lead capacity (new lead count and limit)
+  app.get('/api/my/lead-capacity', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const newLeadCount = await storage.countNewLeadsByOwner(userId);
+      res.json({
+        currentNewLeads: newLeadCount,
+        limit: 15,
+        remaining: Math.max(0, 15 - newLeadCount)
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to fetch lead capacity', error: error.message });
     }
   });
 
@@ -1751,7 +1827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: z.string().optional().or(z.literal("")),
         location: z.string().optional().or(z.literal("")),
         degree: z.string().optional().or(z.literal("")),
-        status: z.enum(['new', 'register', 'scheduled', 'completed', 'not_interested', 'pending', 'ready_for_class', 'not_available', 'no_show', 'reschedule', 'pending_but_ready', 'wrong_number', 'not_picking', 'call_back']).optional(),
+        status: z.enum(['new', 'register', 'scheduled', 'completed', 'pending', 'ready_for_class', 'call_back', 'dropped']).optional(),
         notes: z.string().optional(),
         changeReason: z.string().optional(),
         // Scheduling information - HR can now save walk-in date and time
@@ -2012,8 +2088,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid lead ID" });
       }
 
-      if (!['wrong_number', 'not_interested', 'not_picking'].includes(releaseReason)) {
-        return res.status(400).json({ message: "Invalid release reason" });
+      if (!['dropped'].includes(releaseReason)) {
+        return res.status(400).json({ message: "Invalid release reason. Use 'dropped'." });
       }
 
       const currentLead = await storage.getLead(leadId);
@@ -2250,6 +2326,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "HR users can only assign leads to themselves" });
         }
 
+        // Check 15 new lead limit for HR users
+        const newLeadCount = await storage.countNewLeadsByOwner(userId);
+        if (newLeadCount >= 15) {
+          return res.status(429).json({ 
+            message: "You have exceeded your individual limit of 15 new leads. Please update the status of your existing leads before adding more.",
+            currentCount: newLeadCount,
+            limit: 15
+          });
+        }
+
         const existingLead = await storage.getLead(leadId);
         if (!existingLead) {
           return res.status(404).json({ message: "Lead not found" });
@@ -2416,13 +2502,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const memberLeads = memberLeadsResult.leads || [];
 
-        // Calculate stats
-        const totalLeads = memberLeads.length;
+        // Calculate stats based on completed and dropped leads
         const completedLeads = memberLeads.filter((l: any) =>
           l.status === 'completed' || l.status === 'ready_for_class' || l.status === 'accounts_pending'
         ).length;
-        const pendingLeads = totalLeads - completedLeads;
-        const completionRate = totalLeads > 0 ? Math.round((completedLeads / totalLeads) * 100) : 0;
+        const droppedLeads = memberLeads.filter((l: any) => l.status === 'dropped').length;
+        const relevantTotal = completedLeads + droppedLeads;
+        const completionRate = relevantTotal > 0 ? Math.round((completedLeads / relevantTotal) * 100) : 0;
+        
+        const totalLeads = memberLeads.length;
+        const pendingLeads = totalLeads - completedLeads - droppedLeads;
 
         teamMemberStats.push({
           id: member.id,
@@ -2458,7 +2547,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const completedLeads = allTeamLeads.filter((l: any) =>
         l.status === 'completed' || l.status === 'ready_for_class' || l.status === 'accounts_pending'
       ).length;
-      const overallCompletionRate = totalLeads > 0 ? Math.round((completedLeads / totalLeads) * 100) : 0;
+      const droppedLeads = allTeamLeads.filter((l: any) => l.status === 'dropped').length;
+      const relevantTotal = completedLeads + droppedLeads;
+      const overallCompletionRate = relevantTotal > 0 ? Math.round((completedLeads / relevantTotal) * 100) : 0;
 
       res.json({
         teamLeadName: teamLead.fullName || teamLead.email,
@@ -2529,12 +2620,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         console.log(`[/api/my/leads] Session Organizer filters fully applied (status: ${status}):`, JSON.stringify(filters));
       } else if (userRole === 'manager' || userRole === 'admin') {
-        // Managers/Admins see all leads except completed ones
+        // Managers/Admins see all leads except completed and dropped ones
         filters.excludeCompleted = true;
+        filters.excludeDropped = true;
       } else {
-        // HR users see their assigned leads, excluding completed and accounts_pending
+        // HR users see their assigned leads, excluding completed, dropped, and accounts_pending
         filters.ownerId = userId;
         filters.excludeCompleted = true;
+        filters.excludeDropped = true;
         filters.excludeAccountsPending = true;
       }
 
@@ -2932,11 +3025,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             location: rowData.location || getColumnValue(rowData, 'location', 'Location', 'City', 'Address'),
             degree: rowData.degree || getColumnValue(rowData, 'degree', 'Degree', 'Qualification', 'Education'),
             domain: rowData.domain || getColumnValue(rowData, 'domain', 'Domain', 'Field', 'Subject'),
-            sessionDays: parseSessionDays(rowData.session_days || getColumnValue(rowData, 'session_days', 'sessionDays', 'Session Days')),
-            sourceManagerId: actualUserId,
-            status: 'new',
-            isActive: true,
-            category: uploadCategory
+            source: 'bulk_import',
+            uploadedBy: actualUserId
           };
 
           // Handle additional dynamic columns explicitly
@@ -2950,16 +3040,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             leadData.collegeName = String(collegeName);
           }
 
-          const notes = getColumnValue(rowData, 'notes', 'Notes', 'Comment', 'Comments');
-          if (notes) {
-            leadData.notes = String(notes);
-          }
+          // No longer assigning currentOwnerId to null manually since it's going to temp_leads
 
-          // Always leave imported leads unassigned so they appear in Lead Management
-          // HR users can pick them up from there instead of having them auto-assigned
-          leadData.currentOwnerId = null;
-
-          const validatedLead = insertLeadSchema.parse(leadData);
+          const validatedLead = insertTempLeadSchema.parse(leadData);
           leadsToInsert.push(validatedLead);
           processedCount++;
         } catch (error) {
@@ -2970,8 +3053,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (leadsToInsert.length > 0) {
-        console.log(`Processing ${leadsToInsert.length} valid leads for bulk insert`);
-        await storage.createLeadsBulk(leadsToInsert);
+        console.log(`Processing ${leadsToInsert.length} valid temp leads for bulk insert`);
+        await storage.insertTempLeadsBulk(leadsToInsert);
         console.log(`Bulk insert of ${leadsToInsert.length} leads finished`);
       } else {
         console.log("No valid leads to insert");
@@ -3106,14 +3189,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             location: row.Location && row.Location !== 'nil' ? row.Location : null,
             degree: row.Degree && row.Degree !== 'nil' ? row.Degree : null,
             collegeName: row.College && row.College !== 'nil' ? row.College : null,
-            sourceManagerId: currentUser?.id,
-            status: 'new',
-            isActive: true,
-            category: category,
-            currentOwnerId: null // handled by allocation strategy if implemented elsewhere, or stays null
+            source: 'ocr',
+            uploadedBy: currentUser?.id
           };
           
-          const validatedLead = insertLeadSchema.parse(leadData);
+          const validatedLead = insertTempLeadSchema.parse(leadData);
           leadsToInsert.push(validatedLead);
           processedCount++;
         } catch (error) {
@@ -3124,7 +3204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (leadsToInsert.length > 0) {
-        await storage.createLeadsBulk(leadsToInsert);
+        await storage.insertTempLeadsBulk(leadsToInsert);
       }
 
       res.json({
@@ -3136,6 +3216,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in bulk insert json:", error);
       res.status(500).json({ message: "Failed to insert leads" });
+    }
+  });
+
+  // ==================== TEMP LEADS & PUSH WORKFLOW ====================
+
+  app.get('/api/temp-leads', isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user.role;
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      const leads = await storage.getTempLeads();
+      res.json(leads);
+    } catch (error) {
+      console.error("Error fetching temp leads:", error);
+      res.status(500).json({ message: "Failed to fetch temporary leads" });
+    }
+  });
+
+  app.post('/api/temp-leads/push', isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user.role;
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { count = 10, targetType, targetIds } = req.body;
+      if (!targetType || !['common_pool', 'team', 'individual'].includes(targetType)) {
+        return res.status(400).json({ message: "Invalid target type" });
+      }
+
+      const tempLeads = await storage.getTempLeads();
+      
+      let totalNeeded = count;
+      if (targetType === 'team' || targetType === 'individual') {
+        if (!Array.isArray(targetIds) || targetIds.length === 0) {
+          return res.status(400).json({ message: "No targets selected" });
+        }
+        totalNeeded = count * targetIds.length;
+      }
+
+      if (tempLeads.length < totalNeeded) {
+        return res.status(400).json({ message: `Not enough leads in temporary storage. Need ${totalNeeded}, but only have ${tempLeads.length}.` });
+      }
+
+      const leadsToProcess = tempLeads.slice(0, totalNeeded);
+      const leadsToInsert: any[] = [];
+      const tempIdsToDelete: number[] = [];
+
+      let currentIndex = 0;
+
+      const assignLeads = (assignedTeamId: string | null, assignedUserId: string | null) => {
+        for (let i = 0; i < count; i++) {
+          const tempLead = leadsToProcess[currentIndex++];
+          leadsToInsert.push({
+            name: tempLead.name || 'Unknown',
+            email: tempLead.email,
+            phone: tempLead.phone,
+            location: tempLead.location,
+            degree: tempLead.degree,
+            domain: tempLead.domain,
+            yearOfPassing: tempLead.yearOfPassing,
+            collegeName: tempLead.collegeName,
+            status: 'new',
+            isActive: true,
+            sourceManagerId: req.user.claims.sub,
+            assignedTeamId,
+            assignedUserId,
+          });
+          tempIdsToDelete.push(tempLead.id);
+        }
+      };
+
+      if (targetType === 'common_pool') {
+        assignLeads(null, null);
+      } else if (targetType === 'team') {
+        for (const teamId of targetIds) {
+          assignLeads(teamId, null);
+        }
+      } else if (targetType === 'individual') {
+        for (const userId of targetIds) {
+          assignLeads(null, userId);
+        }
+      }
+
+      // Insert into main leads table
+      if (leadsToInsert.length > 0) {
+        await storage.createLeadsBulk(leadsToInsert.map(l => insertLeadSchema.parse(l)));
+        // Delete from temp table
+        await storage.deleteTempLeads(tempIdsToDelete);
+      }
+
+      res.json({ message: `Successfully pushed ${leadsToInsert.length} leads.` });
+    } catch (error) {
+      console.error("Error pushing temp leads:", error);
+      res.status(500).json({ message: "Failed to push leads" });
     }
   });
 

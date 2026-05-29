@@ -150,7 +150,11 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess, editingUse
       }
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       form.reset();
-      onSuccess();
+      
+      if (isEditMode) {
+        onSuccess();
+      }
+      // If not edit mode, onSuccess will be called by handleCelebrationClose
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {

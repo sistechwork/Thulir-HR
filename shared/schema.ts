@@ -59,6 +59,8 @@ export const leads = pgTable("leads", {
   currentOwnerId: varchar("current_owner_id").references(() => users.id),
   lastOwnerId: varchar("last_owner_id").references(() => users.id),
   sourceManagerId: varchar("source_manager_id").references(() => users.id),
+  assignedTeamId: varchar("assigned_team_id").references(() => users.id),
+  assignedUserId: varchar("assigned_user_id").references(() => users.id),
   status: text("status").notNull().default('new'),
   isActive: boolean("is_active").default(true),
   notes: text("notes"),
@@ -75,8 +77,24 @@ export const leads = pgTable("leads", {
   concession: decimal("concession", { precision: 10, scale: 2 }),
   category: text("category"),
   program: text("program"), // PET or COURSE
+  claimedAt: timestamp("claimed_at"), // When HR claimed this lead (for 120-min auto-release)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const tempLeads = pgTable("temp_leads", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
+  location: text("location"),
+  degree: text("degree"),
+  domain: text("domain"),
+  yearOfPassing: text("year_of_passing"),
+  collegeName: text("college_name"),
+  source: text("source").default('upload'), // 'bulk_import' or 'ocr'
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const leadHistory = pgTable("lead_history", {
@@ -330,7 +348,7 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  status: z.enum(["new", "register", "scheduled", "completed", "not_interested", "pending", "ready_for_class", "wrong_number", "not_picking", "call_back"]).optional(),
+  status: z.enum(["new", "register", "scheduled", "completed", "pending", "ready_for_class", "call_back", "dropped"]).optional(),
   sessionDays: z.enum(["M,W,F", "T,T,S", "daily", "weekend", "custom"]).nullable().optional(),
   yearOfPassing: z.string().nullable().optional(),
   collegeName: z.string().nullable().optional(),
@@ -404,3 +422,7 @@ export type Mark = typeof marks.$inferSelect;
 export type InsertMark = z.infer<typeof insertMarksSchema>;
 export type EmailConfig = typeof emailConfig.$inferSelect;
 export type InsertEmailConfig = z.infer<typeof insertEmailConfigSchema>;
+
+export const insertTempLeadSchema = createInsertSchema(tempLeads);
+export type TempLead = typeof tempLeads.$inferSelect;
+export type InsertTempLead = z.infer<typeof insertTempLeadSchema>;

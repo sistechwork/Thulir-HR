@@ -69,6 +69,8 @@ if (!process.env.DATABASE_URL) {
           concession decimal,
           category text,
           program text,
+          assigned_team_id text,
+          assigned_user_id text,
           created_at timestamp DEFAULT CURRENT_TIMESTAMP,
           updated_at timestamp DEFAULT CURRENT_TIMESTAMP
         )`,
@@ -202,6 +204,20 @@ if (!process.env.DATABASE_URL) {
           smtp_port integer NOT NULL DEFAULT 587,
           is_enabled boolean DEFAULT true,
           updated_at timestamp DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS temp_leads (
+          id SERIAL PRIMARY KEY,
+          name text,
+          email text,
+          phone text,
+          location text,
+          degree text,
+          domain text,
+          year_of_passing text,
+          college_name text,
+          source text,
+          uploaded_by text,
+          created_at timestamp DEFAULT CURRENT_TIMESTAMP
         )`
       ];
 
@@ -212,6 +228,19 @@ if (!process.env.DATABASE_URL) {
           console.error(`Error creating table:`, tableErr);
           // Continue with other tables even if one fails
         }
+      }
+
+      // Add columns safely to existing tables if needed
+      try {
+        await client.exec(`ALTER TABLE leads ADD COLUMN assigned_team_id text;`);
+      } catch (e) {
+        /* ignore column exists error */
+      }
+      
+      try {
+        await client.exec(`ALTER TABLE leads ADD COLUMN assigned_user_id text;`);
+      } catch (e) {
+        /* ignore column exists error */
       }
 
       console.log("✓ PGlite schema initialized successfully.");

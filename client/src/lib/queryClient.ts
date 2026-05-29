@@ -59,8 +59,13 @@ export const getQueryFn: <T>(options: {
       throw new Error('First element of queryKey must be a string URL');
     }
 
-    const res = await fetch(url, {
+    const res = await fetch(url, { 
       credentials: "include",
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

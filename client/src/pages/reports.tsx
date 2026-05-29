@@ -183,9 +183,10 @@ export default function Reports() {
                       <SelectItem value="register">Register</SelectItem>
                       <SelectItem value="scheduled">Scheduled</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="not_interested">Not Interested</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                      <SelectItem value="call_back">Call Back</SelectItem>
+                      <SelectItem value="dropped">Dropped</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

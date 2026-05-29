@@ -89,6 +89,10 @@ async function runDatabaseMigrations() {
     await db.execute(sql`ALTER TABLE marks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`);
     await db.execute(sql`ALTER TABLE marks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
     console.log('[Migration] Marks table schema updated successfully');
+
+    // Add claimed_at column to leads table for 120-min auto-release timer
+    await db.execute(sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP`);
+    console.log('[Migration] leads.claimed_at column added successfully');
   } catch (error: any) {
     console.error('[Migration] Error updating schema:', error.message);
     // Don't fail startup, the columns might already exist
@@ -228,5 +232,22 @@ async function initializeManagerUser() {
     log(`serving on port ${port}`);
     log(`Local: http://localhost:${port}`);
     addresses.forEach(addr => log(`Ethernet: http://${addr}:${port}`));
+
+    // Start the 120-minute auto-release timer (checks every 2 minutes)
+    const AUTO_RELEASE_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+    const AUTO_RELEASE_EXPIRY_MINUTES = 120; // 120 minutes
+
+    setInterval(async () => {
+      try {
+        const released = await storage.releaseExpiredNewLeads(AUTO_RELEASE_EXPIRY_MINUTES);
+        if (released > 0) {
+          console.log(`[Auto-Release Timer] Released ${released} expired new leads back to common pool`);
+        }
+      } catch (error) {
+        console.error('[Auto-Release Timer] Error:', error);
+      }
+    }, AUTO_RELEASE_INTERVAL_MS);
+
+    console.log(`[Auto-Release Timer] Started - checking every ${AUTO_RELEASE_INTERVAL_MS / 60000} minutes for leads older than ${AUTO_RELEASE_EXPIRY_MINUTES} minutes`);
   });
 })();

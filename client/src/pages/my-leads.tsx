@@ -129,6 +129,30 @@ const createLeadSchema = z.object({
 type EditLeadForm = z.infer<typeof editLeadSchema>;
 type CreateLeadForm = z.infer<typeof createLeadSchema>;
 
+const statusOptions = [
+  { value: 'new', label: 'New' },
+  { value: 'register', label: 'Register' },
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'ready_for_class', label: 'Ready for Class' },
+  { value: 'call_back', label: 'Call Back' },
+  { value: 'dropped', label: 'Dropped' },
+];
+
+const getAllowedStatuses = (currentStatus: string) => {
+  switch (currentStatus) {
+    case 'new':
+      return statusOptions.filter(s => s.value !== 'new' || currentStatus === 'new');
+    case 'register':
+      return statusOptions.filter(s => 
+        ['register', 'completed', 'pending', 'ready_for_class', 'dropped'].includes(s.value)
+      );
+    default:
+      return statusOptions.filter(s => s.value !== 'new');
+  }
+};
+
 export default function MyLeadsPage() {
   const { user: authUser } = useAuth();
   const user = authUser as AuthUser | undefined;
@@ -140,6 +164,13 @@ export default function MyLeadsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [releaseLeadId, setReleaseLeadId] = useState<number | null>(null);
   const [releaseReason, setReleaseReason] = useState<string>("");
+  const [, setTick] = useState(0); // Used to force re-render for countdown timers
+
+  // Re-render every 30 seconds to update countdown timers
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -151,18 +182,14 @@ export default function MyLeadsPage() {
         return "status-scheduled";
       case "completed":
         return "status-completed";
-      case "not_interested":
-        return "status-not-interested";
       case "pending":
         return "status-pending";
       case "ready_for_class":
         return "status-ready-for-class";
-      case "wrong_number":
-        return "status-not-interested";
-      case "not_picking":
-        return "status-not-picking";
       case "call_back":
         return "status-scheduled";
+      case "dropped":
+        return "status-not-interested";
       default:
         return "status-new";
     }
@@ -208,6 +235,20 @@ export default function MyLeadsPage() {
     },
     retry: false,
     enabled: user?.role === 'accounts', // Only for accounts users
+  });
+
+  // Fetch HR lead capacity (new lead count & limit)
+  const { data: capacityData } = useQuery({
+    queryKey: ["/api/my/lead-capacity"],
+    queryFn: async () => {
+      const response = await fetch("/api/my/lead-capacity", { credentials: "include" });
+      if (!response.ok) return { currentNewLeads: 0, limit: 15, remaining: 15 };
+      return response.json();
+    },
+    retry: false,
+    staleTime: 0,
+    enabled: user?.role === 'hr',
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Update lead mutation
@@ -709,13 +750,9 @@ export default function MyLeadsPage() {
                         <SelectItem value="register">Register</SelectItem>
                         <SelectItem value="scheduled">Scheduled</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="not_interested">
-                          Not Interested
-                        </SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="ready_for_class">
-                          Ready for Class
-                        </SelectItem>
+                        <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                        <SelectItem value="dropped">Dropped</SelectItem>
                       </>
                     )}
                   </SelectContent>
@@ -779,6 +816,20 @@ export default function MyLeadsPage() {
                         >
                           {lead.status.replace("_", " ")}
                         </Badge>
+                        {/* 120-min countdown for new leads */}
+                        {lead.status === 'new' && lead.claimedAt && (() => {
+                          const claimedTime = new Date(lead.claimedAt).getTime();
+                          const expiryTime = claimedTime + 120 * 60 * 1000;
+                          const remaining = Math.max(0, expiryTime - Date.now());
+                          const mins = Math.floor(remaining / 60000);
+                          const secs = Math.floor((remaining % 60000) / 1000);
+                          if (remaining <= 0) return <span className="text-xs text-red-500 font-medium">⏰ Expired</span>;
+                          return (
+                            <span className={`text-xs font-medium ${mins < 15 ? 'text-red-500' : mins < 30 ? 'text-yellow-600' : 'text-muted-foreground'}`}>
+                              ⏱ {mins}m {secs}s left
+                            </span>
+                          );
+                        })()}
                         {lead.createdAt && (
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="w-3 h-3 mr-1" />
@@ -1045,16 +1096,11 @@ export default function MyLeadsPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="new">New</SelectItem>
-                              <SelectItem value="register">Register</SelectItem>
-                              <SelectItem value="scheduled">Scheduled</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="not_interested">Not Interested</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                              <SelectItem value="wrong_number">Wrong Number</SelectItem>
-                              <SelectItem value="not_picking">Not Picking</SelectItem>
-                              <SelectItem value="call_back">Call Back</SelectItem>
+                              {getAllowedStatuses(filteredLeads.find((l: any) => l.id === editingLeadId)?.status || 'new').map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1429,6 +1475,38 @@ export default function MyLeadsPage() {
           </div>
         </div>
 
+        {/* Lead Capacity Banner for HR */}
+        {user?.role === 'hr' && capacityData && (
+          <div className={`rounded-lg border p-3 flex items-center justify-between ${
+            capacityData.remaining === 0 
+              ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' 
+              : capacityData.remaining <= 3 
+                ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800'
+                : 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                New Lead Capacity: {capacityData.currentNewLeads}/{capacityData.limit}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ({capacityData.remaining} remaining)
+              </span>
+            </div>
+            <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all ${
+                  capacityData.remaining === 0 
+                    ? 'bg-red-500' 
+                    : capacityData.remaining <= 3 
+                      ? 'bg-yellow-500' 
+                      : 'bg-green-500'
+                }`}
+                style={{ width: `${(capacityData.currentNewLeads / capacityData.limit) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         {total > 0 && (
           <div className="flex flex-col sm:flex-row gap-4">
@@ -1458,13 +1536,9 @@ export default function MyLeadsPage() {
                 <SelectItem value="register">Register</SelectItem>
                 <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="not_interested">
-                  Not Interested
-                </SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="ready_for_class">
-                  Ready for Class
-                </SelectItem>
+                <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                <SelectItem value="dropped">Dropped</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -2062,16 +2136,11 @@ export default function MyLeadsPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="new">New</SelectItem>
-                              <SelectItem value="register">Register</SelectItem>
-                              <SelectItem value="scheduled">Scheduled</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="not_interested">Not Interested</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="ready_for_class">Ready for Class</SelectItem>
-                              <SelectItem value="wrong_number">Wrong Number</SelectItem>
-                              <SelectItem value="not_picking">Not Picking</SelectItem>
-                              <SelectItem value="call_back">Call Back</SelectItem>
+                              {getAllowedStatuses(filteredLeads.find((l: any) => l.id === editingLeadId)?.status || 'new').map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -2669,9 +2738,7 @@ export default function MyLeadsPage() {
                 onChange={(e) => setReleaseReason(e.target.value)}
               >
                 <option value="" disabled>Select a reason...</option>
-                <option value="wrong_number">Wrong Number</option>
-                <option value="not_interested">Not Interested</option>
-                <option value="not_picking">Not Picking</option>
+                <option value="dropped">Dropped</option>
               </select>
             </div>
             <DialogFooter>

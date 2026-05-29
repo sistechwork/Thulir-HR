@@ -39,13 +39,16 @@ import {
   type InsertMark,
   type EmailConfig,
   type InsertEmailConfig,
+  tempLeads,
+  type TempLead,
+  type InsertTempLead,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, count, sql, inArray, like, or, gte, lte, isNull, aliasedTable } from "drizzle-orm";
+import { eq, and, desc, count, sql, inArray, like, or, gte, lte, isNull, isNotNull, aliasedTable } from "drizzle-orm";
 import fs from 'fs';
 import path from 'path';
 
-export { db, leads, leadHistory, users, uploads, notifications, posts, postLikes, postComments, classes, classStudents, emailConfig };
+export { db, leads, leadHistory, users, uploads, notifications, posts, postLikes, postComments, classes, classStudents, emailConfig, tempLeads };
 export { eq, and, or, sql, inArray, desc };
 
 export interface IStorage {
@@ -72,6 +75,8 @@ export interface IStorage {
   getLeadsByOwner(ownerId: string): Promise<Lead[]>;
   getLeadsByStatus(status: string): Promise<Lead[]>;
   assignLead(leadId: number, toUserId: string, changedByUserId: string, reason?: string): Promise<Lead>;
+  countNewLeadsByOwner(ownerId: string): Promise<number>;
+  releaseExpiredNewLeads(expiryMinutes: number): Promise<number>;
   checkEmailExists(email: string): Promise<boolean>;
   checkEmailExistsBatch(emails: string[]): Promise<Set<string>>;
   searchLeads(filters: {
@@ -206,6 +211,11 @@ export interface IStorage {
   // Email Configuration operations
   getEmailConfig(userId: string): Promise<EmailConfig | undefined>;
   updateEmailConfig(userId: string, config: any): Promise<EmailConfig>;
+  // Temp Lead operations
+  getTempLeads(): Promise<TempLead[]>;
+  insertTempLead(lead: InsertTempLead): Promise<TempLead>;
+  insertTempLeadsBulk(leads: InsertTempLead[]): Promise<TempLead[]>;
+  deleteTempLeads(ids: number[]): Promise<void>;
 
   // Notification operations
   getAbsentDetailsForMentor(mentorEmail: string): Promise<Array<{
@@ -643,6 +653,7 @@ export class DatabaseStorage implements IStorage {
           .update(leads)
           .set({
             currentOwnerId: toUserId,
+            claimedAt: new Date(),
             updatedAt: new Date()
           })
           .where(and(eq(leads.id, leadId), isNull(leads.currentOwnerId)))
@@ -678,6 +689,7 @@ export class DatabaseStorage implements IStorage {
           .update(leads)
           .set({
             currentOwnerId: toUserId,
+            claimedAt: new Date(),
             updatedAt: new Date()
           })
           .where(eq(leads.id, leadId))
@@ -704,6 +716,67 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async countNewLeadsByOwner(ownerId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(leads)
+      .where(and(
+        eq(leads.currentOwnerId, ownerId),
+        eq(leads.status, 'new')
+      ));
+    return Number(result[0]?.count || 0);
+  }
+
+  async releaseExpiredNewLeads(expiryMinutes: number): Promise<number> {
+    const cutoff = new Date(Date.now() - expiryMinutes * 60 * 1000);
+    
+    // Find all expired new leads
+    const expiredLeads = await db
+      .select()
+      .from(leads)
+      .where(and(
+        eq(leads.status, 'new'),
+        isNotNull(leads.currentOwnerId),
+        isNotNull(leads.claimedAt),
+        lte(leads.claimedAt, cutoff)
+      ));
+
+    if (expiredLeads.length === 0) return 0;
+
+    for (const lead of expiredLeads) {
+      // Release the lead back to common pool
+      await db
+        .update(leads)
+        .set({
+          lastOwnerId: lead.currentOwnerId,
+          currentOwnerId: null,
+          claimedAt: null,
+          updatedAt: new Date()
+        })
+        .where(eq(leads.id, lead.id));
+
+      // Create history entry
+      await db.insert(leadHistory).values({
+        leadId: lead.id,
+        fromUserId: lead.currentOwnerId,
+        toUserId: null,
+        previousStatus: 'new',
+        newStatus: 'new',
+        changeReason: `Auto-released: Lead remained in 'new' status for over ${expiryMinutes} minutes`,
+        changeData: {
+          action: 'auto_release',
+          reason: 'expired_new_status',
+          claimedAt: lead.claimedAt,
+          expiredAt: new Date()
+        },
+        changedByUserId: lead.currentOwnerId!,
+      });
+    }
+
+    console.log(`[Auto-Release] Released ${expiredLeads.length} leads that exceeded ${expiryMinutes} min in 'new' status`);
+    return expiredLeads.length;
+  }
+
   async searchLeads(filters: {
     status?: string;
     ownerId?: string;
@@ -716,6 +789,7 @@ export class DatabaseStorage implements IStorage {
     unassigned?: boolean;
     excludeCompleted?: boolean;
     excludeAccountsPending?: boolean;
+    excludeDropped?: boolean;
     previousOwnerId?: string;
     includeHistory?: boolean;
     showAllCompleted?: boolean;
@@ -725,8 +799,10 @@ export class DatabaseStorage implements IStorage {
     statuses?: string[]; // NEW: array of statuses for Session Organizer
     teamMemberIds?: string[]; // NEW: array of team member IDs for HR Team Lead
     hrFilterId?: number | string; // NEW: specific HR filter
+    assignedUserId?: string; // NEW: user ID for assigned leads visibility
+    assignedTeamId?: string | null; // NEW: team ID for assigned leads visibility
   }): Promise<{ leads: any[]; total: number; }> {
-    const { status, ownerId, accountsId, fromDate, toDate, search, page = 1, limit = 20, unassigned, excludeCompleted, excludeAccountsPending, previousOwnerId, includeHistory, showAllCompleted, category, includePreviouslyOwned, accountsStatuses, statuses, teamMemberIds, hrFilterId } = filters;
+    const { status, ownerId, accountsId, fromDate, toDate, search, page = 1, limit = 20, unassigned, excludeCompleted, excludeAccountsPending, excludeDropped, previousOwnerId, includeHistory, showAllCompleted, category, includePreviouslyOwned, accountsStatuses, statuses, teamMemberIds, hrFilterId, assignedUserId, assignedTeamId } = filters;
 
     // Join with users table to get current owner details
     let query = db.select({
@@ -816,10 +892,32 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${leads.status} != 'accounts_pending'`);
     }
 
+    // Handle excludeDropped filter
+    if (excludeDropped) {
+      conditions.push(sql`${leads.status} != 'dropped'`);
+    }
+
     // Handle special unassigned filter for HR users
     if (unassigned) {
-      console.log(`[searchLeads] Applied unassigned filter`);
-      conditions.push(isNull(leads.currentOwnerId));
+      console.log(`[searchLeads] Applied unassigned filter with assignedUserId=${assignedUserId}, assignedTeamId=${assignedTeamId}`);
+      
+      const unassignedConditions = [isNull(leads.currentOwnerId)];
+      
+      if (assignedUserId) {
+        // Must be in common pool, OR assigned to this user, OR assigned to this user's team
+        const visibilityConditions = [
+          and(isNull(leads.assignedUserId), isNull(leads.assignedTeamId)), // Common Pool
+          eq(leads.assignedUserId, assignedUserId) // Specifically assigned to this user
+        ];
+        
+        if (assignedTeamId) {
+          visibilityConditions.push(eq(leads.assignedTeamId, assignedTeamId)); // Assigned to their team
+        }
+        
+        unassignedConditions.push(or(...visibilityConditions));
+      }
+      
+      conditions.push(and(...unassignedConditions));
     } else if (hrFilterId) {
       console.log(`[searchLeads] Applied hrFilterId filter for ID: ${hrFilterId}`);
       // If specific owner selected via HR filter in Lead Management, show both current and last owner
@@ -830,11 +928,24 @@ export class DatabaseStorage implements IStorage {
         )
       );
     } else if (teamMemberIds && teamMemberIds.length > 0) {
+      // Team Leads see:
+      // 1. Leads currently or previously owned by their team
+      // 2. Unassigned leads that are assigned to their team or the common pool
+      
+      const teamVisibilityConditions = [
+        and(isNull(leads.assignedUserId), isNull(leads.assignedTeamId)), // Common Pool
+        inArray(leads.assignedUserId, teamMemberIds) // Assigned specifically to a team member
+      ];
+      
+      if (ownerId) { // ownerId is the Team Lead's user ID passed in
+        teamVisibilityConditions.push(eq(leads.assignedTeamId, ownerId)); // Assigned to their team
+      }
+
       conditions.push(
         or(
-          and(isNull(leads.currentOwnerId), isNull(leads.lastOwnerId)),
-          and(isNull(leads.currentOwnerId), inArray(leads.lastOwnerId, teamMemberIds)),
-          inArray(leads.currentOwnerId, teamMemberIds)
+          and(isNull(leads.currentOwnerId), or(...teamVisibilityConditions)), // Visible Unassigned
+          and(isNull(leads.currentOwnerId), inArray(leads.lastOwnerId, teamMemberIds)), // Released by team
+          inArray(leads.currentOwnerId, teamMemberIds) // Currently owned by team
         )
       );
     } else if ((!accountsStatuses || accountsStatuses.length === 0) && (!statuses || statuses.length === 0)) {
@@ -2015,6 +2126,26 @@ c.*,
       }
     }
     return details;
+  }
+
+  // --- Temp Leads Implementation ---
+  async getTempLeads(): Promise<TempLead[]> {
+    return await db.select().from(tempLeads).orderBy(desc(tempLeads.createdAt));
+  }
+
+  async insertTempLead(lead: InsertTempLead): Promise<TempLead> {
+    const [inserted] = await db.insert(tempLeads).values(lead).returning();
+    return inserted;
+  }
+
+  async insertTempLeadsBulk(leadsData: InsertTempLead[]): Promise<TempLead[]> {
+    if (!leadsData || leadsData.length === 0) return [];
+    return await db.insert(tempLeads).values(leadsData).returning();
+  }
+
+  async deleteTempLeads(ids: number[]): Promise<void> {
+    if (!ids || ids.length === 0) return;
+    await db.delete(tempLeads).where(inArray(tempLeads.id, ids));
   }
 }
 

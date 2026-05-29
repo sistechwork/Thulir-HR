@@ -8,7 +8,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Search, DollarSign, TrendingUp, TrendingDown, Wallet, X, User, Users, Edit2, Check } from "lucide-react";
+import { Search, IndianRupee, TrendingUp, TrendingDown, Wallet, X, User, Users, Edit2, Check } from "lucide-react";
 import FloatingChatbot from "@/components/FloatingChatbot";
 import {
   Popover,
@@ -565,7 +565,7 @@ export default function TallyPage() {
                 <CardTitle className="text-sm font-medium">
                   Total Expected
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <IndianRupee className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground" data-testid="total-amount">
@@ -582,7 +582,7 @@ export default function TallyPage() {
                 <CardTitle className="text-sm font-medium">
                   Concession Amount
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-blue-500" />
+                <IndianRupee className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400" data-testid="concession-amount">

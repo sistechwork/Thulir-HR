@@ -13,7 +13,9 @@ import Leads from "@/pages/leads";
 import MyLeads from "@/pages/my-leads";
 import MySessions from "@/pages/my-sessions";
 import MyCompletion from "@/pages/my-completion";
+import MyDrops from "@/pages/my-drops";
 import Users from "@/pages/users";
+import UploadData from "@/pages/upload-data";
 import MyClasses from "@/pages/classes";
 import ClassStudentsPage from "@/pages/class-students";
 import ClassAttendancePage from "@/pages/class-attendance";
@@ -68,11 +70,13 @@ function Router() {
               <Route path="/my-leads" component={MyLeads} />
               <Route path="/my-sessions" component={MySessions} />
               <Route path="/my-completion" component={MyCompletion} />
+              <Route path="/my-drops" component={MyDrops} />
               <Route path="/allocated-students" component={AllocatedStudentsPage} />
               <Route path="/classes/:id/students" component={ClassStudentsPage} />
               <Route path="/classes/:id/attendance" component={ClassAttendancePage} />
               <Route path="/classes/:id/marks" component={ClassMarksPage} />
               <Route path="/classes" component={MyClasses} />
+              <Route path="/upload-data" component={UploadData} />
               <Route path="/users" component={Users} />
               <Route path="/reports" component={Reports} />
               <Route path="/audit" component={Audit} />

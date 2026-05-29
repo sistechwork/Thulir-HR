@@ -10,17 +10,12 @@ import LeadDetailsModal from "@/components/LeadDetailsModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Upload } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { getAdminSubRole } from "@/lib/adminRoleUtils";
-import BulkUploadModal from "@/components/BulkUploadModal";
-import ScreenshotUploadModal from "@/components/ScreenshotUploadModal";
-import { ImageIcon } from "lucide-react";
 
 export default function Leads() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [showScreenshotUpload, setShowScreenshotUpload] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [filters, setFilters] = useState({
@@ -176,15 +171,16 @@ export default function Leads() {
                   <SelectTrigger className="w-40" data-testid="select-status-filter">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                    <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="register">Register</SelectItem>
                     <SelectItem value="scheduled">Scheduled</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="not_interested">Not Interested</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="ready_for_class">Ready for Class</SelectItem>
+                    <SelectItem value="call_back">Call Back</SelectItem>
+                    <SelectItem value="dropped">Dropped</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -213,29 +209,6 @@ export default function Leads() {
                 )
               )}
 
-
-
-              {/* Bulk Upload - Only for manager and admin */}
-              {(user?.role === "manager" || user?.role === "admin") && (
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={() => setShowScreenshotUpload(true)}
-                    variant="outline"
-                    data-testid="button-screenshot-upload-leads"
-                  >
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    Screenshot OCR
-                  </Button>
-                  <Button
-                    onClick={() => setShowBulkUpload(true)}
-                    className="bg-primary hover:bg-primary/90"
-                    data-testid="button-bulk-upload-leads"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Bulk Import
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -254,18 +227,6 @@ export default function Leads() {
       </div>
 
       {/* Modals */}
-      {showBulkUpload && (
-        <BulkUploadModal
-          isOpen={showBulkUpload}
-          onClose={() => setShowBulkUpload(false)}
-        />
-      )}
-      {showScreenshotUpload && (
-        <ScreenshotUploadModal
-          isOpen={showScreenshotUpload}
-          onClose={() => setShowScreenshotUpload(false)}
-        />
-      )}
       {showLeadDetails && selectedLead && (
         <LeadDetailsModal
           lead={selectedLead}

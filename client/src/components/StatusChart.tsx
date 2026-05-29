@@ -34,17 +34,13 @@ export default function StatusChart({ data, loading = false }: StatusChartProps)
       // Define premium colors for different statuses - more vibrant and professional
       const statusColors: Record<string, string> = {
         new: 'rgb(59, 130, 246)',           // Blue
+        register: 'rgb(236, 72, 153)',      // Rose
         scheduled: 'rgb(168, 85, 247)',     // Purple
         completed: 'rgb(34, 197, 94)',      // Green
-        not_interested: 'rgb(239, 68, 68)', // Red
         pending: 'rgb(249, 115, 22)',       // Orange
         ready_for_class: 'rgb(16, 185, 129)',   // Teal
-        not_available: 'rgb(244, 63, 94)',      // Pink
-        no_show: 'rgb(139, 92, 246)',           // Indigo
-        reschedule: 'rgb(251, 146, 60)',        // Amber
-        pending_but_ready: 'rgb(6, 182, 212)',  // Cyan
         call_back: 'rgb(14, 165, 233)',         // Sky Blue
-        wrong_number: 'rgb(236, 72, 153)',      // Rose
+        dropped: 'rgb(239, 68, 68)',        // Red
       };
 
       const backgroundColors = labels.map(label => 
