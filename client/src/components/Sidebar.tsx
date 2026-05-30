@@ -445,8 +445,8 @@ export default function Sidebar() {
           );
         })}
 
-        {/* My Leads Section for HR, Manager, and Admin Users - NOT for Accounts (they use main My Leads) */}
-        {((user as any)?.role === 'hr' || (user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+        {/* My Leads Section for HR Users - NOT for Accounts (they use main My Leads) */}
+        {((user as any)?.role === 'hr') && (
           <div className="mt-6 pt-4 border-t border-border">
             <button
               onClick={() => setMyLeadsExpanded(!myLeadsExpanded)}
@@ -619,8 +619,8 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* My Completion section for HR, Accounts, Session Coordinator, Manager, and Admin users */}
-        {((user as any)?.role === 'hr' || (user as any)?.role === 'accounts' || (user as any)?.role === 'session-coordinator' || (user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+        {/* My Completion section for HR, Accounts, and Session Coordinator users */}
+        {((user as any)?.role === 'hr' || (user as any)?.role === 'accounts' || (user as any)?.role === 'session-coordinator') && (
           <div className="mt-4">
             <button
               onClick={() => setMyCompletionExpanded(!myCompletionExpanded)}
@@ -677,8 +677,8 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* My Drops section for HR, Manager, and Admin users */}
-        {((user as any)?.role === 'hr' || (user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+        {/* My Drops section for HR users */}
+        {((user as any)?.role === 'hr') && (
           <div className="mt-4">
             <button
               onClick={() => setMyDropsExpanded(!myDropsExpanded)}

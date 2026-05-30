@@ -6,16 +6,41 @@ import { Upload, ImageIcon, Send } from "lucide-react";
 import BulkUploadModal from "@/components/BulkUploadModal";
 import ScreenshotUploadModal from "@/components/ScreenshotUploadModal";
 import PushDataModal from "@/components/PushDataModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UploadData() {
   const { user } = useAuth();
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showScreenshotUpload, setShowScreenshotUpload] = useState(false);
   const [showPushData, setShowPushData] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const { toast } = useToast();
 
-  const { data: tempLeads = [], isLoading } = useQuery({
+  const { data: tempLeads = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/temp-leads"],
   });
+
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      const res = await fetch("/api/temp-leads/all", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete all temp leads");
+      
+      toast({ title: "Success", description: "All temporary leads deleted permanently" });
+      setShowDeleteAllConfirm(false);
+      refetch();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -54,6 +79,15 @@ export default function UploadData() {
                 <Send className="mr-2 h-4 w-4" />
                 Push to Database
               </Button>
+              {((user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setShowDeleteAllConfirm(true)}
+                  disabled={tempLeads.length === 0}
+                >
+                  Delete All
+                </Button>
+              )}
             </div>
           </div>
 
@@ -137,6 +171,23 @@ export default function UploadData() {
           onClose={() => setShowPushData(false)}
           maxLeads={tempLeads.length}
         />
+      )}
+
+      {showDeleteAllConfirm && (
+        <Dialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete All Temporary Leads</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to permanently delete ALL temporary leads? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setShowDeleteAllConfirm(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDeleteAll} disabled={isDeletingAll}>
+                {isDeletingAll ? "Deleting..." : "Yes, Delete All"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

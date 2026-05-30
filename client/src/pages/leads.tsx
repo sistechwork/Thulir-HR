@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 import { getAdminSubRole } from "@/lib/adminRoleUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Leads() {
   const { toast } = useToast();
@@ -25,6 +26,8 @@ export default function Leads() {
     page: 1,
     limit: 20
   });
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   // Show loading while authentication is being checked
   if (isLoading) {
@@ -114,6 +117,26 @@ export default function Leads() {
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
+  };
+
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      const res = await fetch("/api/leads/all", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete all leads");
+      
+      toast({ title: "Success", description: "All leads deleted permanently" });
+      setShowDeleteAllConfirm(false);
+      refetch();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   if (isLoading) {
@@ -209,6 +232,12 @@ export default function Leads() {
                 )
               )}
 
+              {((user as any)?.role === 'manager' || (user as any)?.role === 'admin') && (
+                <Button variant="destructive" onClick={() => setShowDeleteAllConfirm(true)}>
+                  Delete All
+                </Button>
+              )}
+
             </div>
           </div>
         </div>
@@ -237,6 +266,23 @@ export default function Leads() {
           }}
           onUpdate={refetch}
         />
+      )}
+
+      {showDeleteAllConfirm && (
+        <Dialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete All Leads</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to permanently delete ALL leads? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setShowDeleteAllConfirm(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDeleteAll} disabled={isDeletingAll}>
+                {isDeletingAll ? "Deleting..." : "Yes, Delete All"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

@@ -5,7 +5,7 @@ import { storage, db, leads, leadHistory, users, posts, postLikes, postComments,
 import { setupAuth, isAuthenticated, getSession } from "./auth";
 import { hlsStreamer } from "./streaming";
 import { z } from "zod";
-import { insertLeadSchema, insertUserSchema, insertLeadHistorySchema, insertClassSchema, insertClassStudentSchema, insertAttendanceSchema, insertMarksSchema, insertTempLeadSchema } from "@shared/schema";
+import { insertLeadSchema, insertUserSchema, insertLeadHistorySchema, insertClassSchema, insertClassStudentSchema, insertAttendanceSchema, insertMarksSchema, insertTempLeadSchema, attendance, marks, tempLeads, notifications } from "@shared/schema";
 import multer from "multer";
 import xlsx from "xlsx";
 import * as bcrypt from "bcrypt";
@@ -3139,7 +3139,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
            }
         });
         
-        res.json(parsedResults);
+        // Deduplication against leads and temp_leads
+        const finalResults = [];
+        const allTempLeads = await storage.getTempLeads();
+        
+        for (const res of parsedResults) {
+            let isDuplicate = false;
+            
+            // 1. Check within finalResults (batch deduplication)
+            // By Email
+            if (res.Email && res.Email.trim().toLowerCase() !== 'nil') {
+                const emailLower = res.Email.trim().toLowerCase();
+                if (finalResults.some(r => r.Email && r.Email.trim().toLowerCase() === emailLower)) {
+                    isDuplicate = true;
+                }
+            }
+            // By Phone
+            if (!isDuplicate && res.Phone && res.Phone.trim().toLowerCase() !== 'nil') {
+                const phoneStr = String(res.Phone).replace(/\D/g, '');
+                if (phoneStr.length >= 10 && finalResults.some(r => r.Phone && String(r.Phone).replace(/\D/g, '') === phoneStr)) {
+                    isDuplicate = true;
+                }
+            }
+            // By Name (only if Email and Phone were nil)
+            if (!isDuplicate && (!res.Email || res.Email.trim().toLowerCase() === 'nil') && (!res.Phone || res.Phone.trim().toLowerCase() === 'nil')) {
+                if (res.Name && res.Name.trim().toLowerCase() !== 'nil') {
+                    const nameLower = res.Name.trim().toLowerCase();
+                    if (finalResults.some(r => r.Name && r.Name.trim().toLowerCase() === nameLower)) {
+                        isDuplicate = true;
+                    }
+                }
+            }
+
+            // 2. Check against databases
+            if (!isDuplicate) {
+                // Check Email
+                if (res.Email && res.Email.trim().toLowerCase() !== 'nil') {
+                    const emailLower = res.Email.trim().toLowerCase();
+                    // Check temp_leads
+                    if (allTempLeads.some(l => l.email && l.email.toLowerCase() === emailLower)) {
+                        isDuplicate = true;
+                    }
+                    // Check leads
+                    if (!isDuplicate) {
+                        const existingEmails = await storage.checkEmailExistsBatch([emailLower]);
+                        if (existingEmails.size > 0) isDuplicate = true;
+                    }
+                }
+                
+                // Check Phone
+                if (!isDuplicate && res.Phone && res.Phone.trim().toLowerCase() !== 'nil') {
+                    const phoneStr = String(res.Phone).replace(/\D/g, '');
+                    if (phoneStr.length >= 10) {
+                        // Check temp_leads
+                        if (allTempLeads.some(l => l.phone && String(l.phone).replace(/\D/g, '') === phoneStr)) {
+                            isDuplicate = true;
+                        }
+                        // Check leads
+                        if (!isDuplicate) {
+                            const existingPhone = await db.select().from(leads).where(sql`${leads.phone} LIKE ${'%' + phoneStr.slice(-10)}`).limit(1);
+                            if (existingPhone.length > 0) isDuplicate = true;
+                        }
+                    }
+                }
+
+                // Check Name (fallback if email and phone are nil)
+                if (!isDuplicate && (!res.Email || res.Email.trim().toLowerCase() === 'nil') && (!res.Phone || res.Phone.trim().toLowerCase() === 'nil')) {
+                    if (res.Name && res.Name.trim().toLowerCase() !== 'nil') {
+                        const nameLower = res.Name.trim().toLowerCase();
+                        // Check temp_leads
+                        if (allTempLeads.some(l => l.name && l.name.toLowerCase() === nameLower)) {
+                            isDuplicate = true;
+                        }
+                        // Check leads
+                        if (!isDuplicate) {
+                            const existingName = await db.select().from(leads).where(sql`LOWER(${leads.name}) = ${nameLower}`).limit(1);
+                            if (existingName.length > 0) isDuplicate = true;
+                        }
+                    }
+                }
+            }
+            
+            if (!isDuplicate) {
+                finalResults.push(res);
+            }
+        }
+        
+        res.json(finalResults);
       } catch (err: any) {
         console.error('Error running OCR script:', err);
         res.status(500).json({ message: "Failed to extract text via OCR" });
@@ -4242,6 +4328,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authenticatedClients.delete(ws);
       console.log(`WebSocket client disconnected: ${userId}`);
     });
+  });
+
+  // Delete all leads endpoint for manager/admin
+  app.delete('/api/leads/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user.role;
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      // Delete dependencies first
+      await db.delete(notifications);
+      await db.delete(leadHistory);
+      await db.delete(classStudents);
+      await db.delete(attendance);
+      await db.delete(marks);
+      
+      // Delete leads
+      await db.delete(leads);
+      res.json({ message: "All leads deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting all leads:", error);
+      res.status(500).json({ message: "Failed to delete all leads" });
+    }
+  });
+
+  // Delete all temp leads endpoint for manager/admin
+  app.delete('/api/temp-leads/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user.role;
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      await db.delete(tempLeads);
+      res.json({ message: "All temp leads deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting all temp leads:", error);
+      res.status(500).json({ message: "Failed to delete all temp leads" });
+    }
   });
 
   // Broadcast function for real-time updates with role-based filtering

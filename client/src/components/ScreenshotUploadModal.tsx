@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Upload, ImageIcon, X, AlertCircle, CheckCircle, Edit2 } from "lucide-react";
+import { Upload, ImageIcon, X, AlertCircle, CheckCircle, Edit2, Eye, Trash2 } from "lucide-react";
 
 interface ScreenshotUploadModalProps {
   isOpen: boolean;
@@ -40,6 +40,23 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
   const [extractedData, setExtractedData] = useState<ExtractedLead[] | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [viewImage, setViewImage] = useState<string | null>(null);
+
+  const deleteRow = (index: number) => {
+    if (!extractedData) return;
+    const newData = [...extractedData];
+    newData.splice(index, 1);
+    setExtractedData(newData.length > 0 ? newData : null);
+  };
+
+  const viewScreenshot = (filename: string) => {
+    const file = selectedFiles.find(f => f.name === filename);
+    if (file) {
+      setViewImage(URL.createObjectURL(file));
+    } else {
+      toast({ title: "Screenshot not found", variant: "destructive" });
+    }
+  };
 
   // Mutation to extract data from screenshots
   const extractMutation = useMutation({
@@ -328,6 +345,8 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
                       <th className="px-4 py-3">Location</th>
                       <th className="px-4 py-3">Degree</th>
                       <th className="px-4 py-3">Source</th>
+                      <th className="px-4 py-3 text-center">View</th>
+                      <th className="px-4 py-3 text-center">Delete</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -373,6 +392,16 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
                             {row.Source}
                           </span>
                         </td>
+                        <td className="px-4 py-2 text-center">
+                          <Button variant="ghost" size="icon" onClick={() => viewScreenshot(row.File)} title="View Screenshot">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          <Button variant="ghost" size="icon" onClick={() => deleteRow(idx)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50" title="Delete Row">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -391,6 +420,20 @@ export default function ScreenshotUploadModal({ isOpen, onClose }: ScreenshotUpl
                   {pushMutation.isPending ? "Saving..." : "Push to Temporary Database"}
                 </Button>
               </div>
+            </div>
+          )}
+          
+          {/* Image Viewer Popup */}
+          {viewImage && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+               <div className="relative max-w-4xl max-h-[90vh] bg-background rounded-lg p-2 shadow-xl flex flex-col items-center">
+                  <div className="absolute -top-3 -right-3 z-10 bg-background rounded-full border shadow-sm">
+                     <Button variant="ghost" size="icon" onClick={() => setViewImage(null)} className="h-8 w-8 rounded-full hover:bg-destructive hover:text-destructive-foreground">
+                        <X className="h-4 w-4" />
+                     </Button>
+                  </div>
+                  <img src={viewImage} alt="Screenshot" className="max-w-full max-h-[85vh] object-contain rounded" />
+               </div>
             </div>
           )}
         </div>
