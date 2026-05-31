@@ -130,27 +130,18 @@ type EditLeadForm = z.infer<typeof editLeadSchema>;
 type CreateLeadForm = z.infer<typeof createLeadSchema>;
 
 const statusOptions = [
-  { value: 'new', label: 'New' },
+  { value: 'schedule', label: 'Schedule' },
+  { value: 'reshedule', label: 'Reshedule' },
   { value: 'register', label: 'Register' },
-  { value: 'scheduled', label: 'Scheduled' },
   { value: 'completed', label: 'Completed' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'ready_for_class', label: 'Ready for Class' },
-  { value: 'call_back', label: 'Call Back' },
+  { value: 'not_picking', label: 'Not Picking' },
+  { value: 'not_interest', label: 'Not Interest' },
   { value: 'dropped', label: 'Dropped' },
+  { value: 'call_back', label: 'Call Back' },
 ];
 
 const getAllowedStatuses = (currentStatus: string) => {
-  switch (currentStatus) {
-    case 'new':
-      return statusOptions.filter(s => s.value !== 'new' || currentStatus === 'new');
-    case 'register':
-      return statusOptions.filter(s => 
-        ['register', 'completed', 'pending', 'ready_for_class', 'dropped'].includes(s.value)
-      );
-    default:
-      return statusOptions.filter(s => s.value !== 'new');
-  }
+  return statusOptions;
 };
 
 export default function MyLeadsPage() {
@@ -2401,6 +2392,107 @@ export default function MyLeadsPage() {
                       )}
                     />
                   </div>
+
+                  {/* Financial Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="registrationAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 5000.00"
+                              {...field}
+                              data-testid="input-edit-registration-amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="pendingAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pending Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 2000.00"
+                              {...field}
+                              data-testid="input-edit-pending-amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="partialAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Partial Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 1000.00"
+                              {...field}
+                              data-testid="input-edit-partial-amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="concession"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Concession Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="e.g., 500.00"
+                              {...field}
+                              data-testid="input-edit-concession"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="transactionNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Transaction Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., TXN123456"
+                            {...field}
+                            data-testid="input-edit-transaction-number"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}

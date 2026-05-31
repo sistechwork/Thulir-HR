@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.webp";
+import logoImage from "@assets/new_logo.png";
 import slideImage1 from "@assets/Gemini_Generated_Image_7ykxay7ykxay7ykx_1764052434472.webp";
 import slideImage2 from "@assets/Gemini_Generated_Image_1d294m1d294m1d29_1764052434473.webp";
 import slideImage3 from "@assets/Gemini_Generated_Image_f6qyxpf6qyxpf6qy_1764052662755.webp";

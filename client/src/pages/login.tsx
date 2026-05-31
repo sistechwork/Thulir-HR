@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import logoImage from "@assets/Gemini_Generated_Image_kis2mfkis2mfkis2 (2)_1764051974976.webp";
+import logoImage from "@assets/new_logo.png";
 import FloatingChatbot from "@/components/FloatingChatbot";
 
 const CATEGORIES = [

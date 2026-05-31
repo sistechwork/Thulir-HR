@@ -680,6 +680,7 @@ export default function TallyPage() {
                       <TableHead>Transaction #</TableHead>
                       <TableHead className="text-right">Registration Amount</TableHead>
                       <TableHead className="text-right">Concession Amount</TableHead>
+                      <TableHead className="text-right">Total Balance Amount</TableHead>
                       <TableHead className="text-right">Pending Amount</TableHead>
                       <TableHead className="text-right">Partial Amount</TableHead>
                       <TableHead className="text-right">Collected Amount</TableHead>
@@ -758,6 +759,9 @@ export default function TallyPage() {
                               ? `₹${parseFloat(lead.concession).toFixed(2)}`
                               : '—'}
                           </TableCell>
+                          <TableCell className="text-right font-medium font-bold text-foreground">
+                            {`₹${((parseFloat(lead.totalAmount || "7000")) - (lead.concession ? parseFloat(lead.concession) : 0)).toFixed(2)}`}
+                          </TableCell>
                           <TableCell className="text-right font-medium text-destructive">
                             {`₹${((parseFloat(lead.totalAmount || "7000")) - ((lead.registrationAmount ? parseFloat(lead.registrationAmount) : 0) + (lead.concession ? parseFloat(lead.concession) : 0) + (lead.partialAmount ? parseFloat(lead.partialAmount) : 0))).toFixed(2)}`}
                           </TableCell>
@@ -783,7 +787,7 @@ export default function TallyPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                           {searchTerm || filterAccountsUser
                             ? 'No leads found matching your filters.'
                             : 'No leads with financial data available.'}

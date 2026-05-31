@@ -1,4 +1,4 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,7 +17,7 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, 'client'),
   build: {
-    outDir: path.resolve(__dirname, 'dist/public'),
+    outDir: path.resolve(__dirname, 'server/public'),
     emptyOutDir: true,
     reportCompressedSize: true,
     cssCodeSplit: true,

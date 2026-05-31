@@ -3444,9 +3444,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status, hrId, accountsId, fromDate, toDate, format = 'csv' } = req.query;
 
       const filters: any = {};
-      if (status) filters.status = status;
-      if (hrId) filters.ownerId = hrId;
-      if (accountsId) filters.accountsId = accountsId;
+      if (status && status !== 'all') filters.status = status;
+      if (hrId && hrId !== 'all') filters.ownerId = hrId;
+      if (accountsId && accountsId !== 'all') filters.accountsId = accountsId;
       if (fromDate) filters.fromDate = fromDate;
       if (toDate) filters.toDate = toDate;
 
@@ -3469,43 +3469,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pendingAmount = TOTAL_AMOUNT - (regAmount + concessionAmount + partAmount);
         const collectedAmount = regAmount + partAmount;
 
-        // Format walk-in date properly
-        const walkinDateFormatted = lead.walkinDate
-          ? new Date(lead.walkinDate).toLocaleDateString('en-IN')
-          : '—';
+        // Format registration date properly
+        const regDateFormatted = lead.createdAt
+          ? new Date(lead.createdAt).toLocaleDateString('en-IN')
+          : '-';
 
         return {
-          // Basic Information
-          name: lead.name || '',
-          email: lead.email || '',
-          phone: lead.phone || '',
-          location: lead.location || '',
-          degree: lead.degree || '',
-          domain: lead.domain || '',
-
-          // Walk-in Information (ensure these are included)
-          'Walk-in Date': walkinDateFormatted,
-          'Walk-in Time': lead.walkinTime || '—',
-          'Session Days': lead.sessionDays || '',
-          'Timing': lead.timing || '—',
-
-          // Financial Information (ensure calculations are correct)
-          'Registration Amount': regAmount > 0 ? `₹${regAmount.toFixed(2)}` : '—',
-          'Partial Amount': partAmount > 0 ? `₹${partAmount.toFixed(2)}` : '—',
-          'Concession': concessionAmount > 0 ? `₹${concessionAmount.toFixed(2)}` : '—',
-          'Pending Amount': `₹${Math.max(0, pendingAmount).toFixed(2)}`,
-          'Collected Amount': `₹${collectedAmount.toFixed(2)}`,
-          'Transaction Number': lead.transactionNumber || '—',
-
-          // Status & Team Information
-          'Status': lead.status || '',
-          'HR Handler': lead.hrName || 'Unassigned',
-          'Accounts Handler': lead.accountsHandlerName || 'N/A',
-          'Manager': lead.managerName || 'N/A',
-
-          // Dates
-          'Created At': lead.createdAt || '',
-          'Updated At': lead.updatedAt || ''
+          'Reg Date': regDateFormatted,
+          'Name': lead.name || '-',
+          'Email': lead.email || '-',
+          'Phone Num': lead.phone || '-',
+          'Dept': lead.degree || '-',
+          'Cllge Name': lead.collegeName || '-',
+          'Hr Name': lead.hrName || '-',
+          'Domain': lead.domain || '-',
+          'Status': lead.status || '-'
         };
       });
 
@@ -3515,15 +3493,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Create summary sheet with export metadata
         const summaryData = [
-          { 'Export Information': 'Value' },
-          { 'Export Generated': new Date(exportTimestamp).toLocaleString() },
-          { 'Total Records': exportData.length },
-          { 'Filtered by Status': status || 'All' },
-          { 'Filtered by HR ID': hrId || 'All' },
-          { 'Filtered by Accounts ID': accountsId || 'All' },
-          { 'Date Range From': fromDate || 'All' },
-          { 'Date Range To': toDate || 'All' },
-          { 'Data Freshness': 'Real-time - Generated on demand' }
+          { 'Export Information': 'Export Generated', 'Value': new Date(exportTimestamp).toLocaleString() },
+          { 'Export Information': 'Total Records', 'Value': exportData.length },
+          { 'Export Information': 'Filtered by Status', 'Value': status || 'All' },
+          { 'Export Information': 'Filtered by HR ID', 'Value': hrId || 'All' },
+          { 'Export Information': 'Filtered by Accounts ID', 'Value': accountsId || 'All' },
+          { 'Export Information': 'Date Range From', 'Value': fromDate || 'All' },
+          { 'Export Information': 'Date Range To', 'Value': toDate || 'All' },
+          { 'Export Information': 'Data Freshness', 'Value': 'Real-time - Generated on demand' }
         ];
 
         const summarySeries = xlsx.utils.json_to_sheet(summaryData);
