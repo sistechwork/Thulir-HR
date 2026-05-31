@@ -37,14 +37,14 @@ export default function Landing() {
       {/* Floating Chatbot Button */}
       <FloatingChatbot />
 
-      <div className="container mx-auto px-4 pt-4 pb-16 relative z-10">
+      <div className="container mx-auto px-4 py-4 relative z-10 flex flex-col items-center justify-center min-h-[90vh]">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-8">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-6">
             <img
               src={logoImage}
               alt="VHomofi HRM Portal Logo"
-              className="h-48 object-contain dark:brightness-110"
+              className="h-28 object-contain dark:brightness-110"
             />
           </div>
           <p className="text-xl text-[#666666] dark:text-[#999999] max-w-2xl mx-auto">
@@ -57,7 +57,7 @@ export default function Landing() {
         </div>
 
         {/* Features Slideshow */}
-        <Card className="max-w-4xl mx-auto bg-white dark:bg-[#1a1a1a] border-[#e0e0e0] dark:border-[#333333] mb-16 overflow-hidden">
+        <Card className="w-full max-w-4xl mx-auto bg-white dark:bg-[#1a1a1a] border-[#e0e0e0] dark:border-[#333333] mb-8 overflow-hidden shrink-0">
           <CardContent className="p-0">
             <div className="slideshow-container">
               {slideImages.map((image, index) => (
@@ -83,17 +83,20 @@ export default function Landing() {
         </Card>
 
         {/* CTA Section */}
-        <Card className="max-w-md mx-auto bg-white dark:bg-[#1a1a1a] border-[#e0e0e0] dark:border-[#333333]">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-6">
-              <h2 className="text-2xl font-bold text-[#1a1a1a] dark:text-[#f5f5f5]">Get Started</h2>
-              <p className="text-[#666666] dark:text-[#999999]">
-                Sign in to access your Vcodez dashboard and start managing leads efficiently.
-              </p>
+        <Card className="max-w-md mx-auto bg-white/80 backdrop-blur-md border-gray-100 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-2xl overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#11754c]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <CardContent className="pt-8 pb-8 px-8 relative z-10">
+            <div className="text-center space-y-8">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Get Started</h2>
+                <p className="text-gray-500 text-base leading-relaxed">
+                  Sign in to access your Thulir Hr dashboard and start managing leads efficiently.
+                </p>
+              </div>
               <Button
                 onClick={handleLogin}
                 size="lg"
-                className="w-full bg-[#11754c] hover:bg-[#04e284] text-white font-medium"
+                className="w-full py-6 text-lg bg-[#11754c] hover:bg-[#0e623b] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-[#11754c]/20 transition-all duration-300"
                 data-testid="button-login"
               >
                 Sign In to Portal

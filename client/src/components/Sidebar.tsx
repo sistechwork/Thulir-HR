@@ -387,7 +387,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="h-full w-full backdrop-blur-[100px] border-r border-white/20 flex flex-col z-40 text-black shadow-[4px_0_24px_rgba(0,0,0,0.05)]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)' }} data-testid="sidebar">
+    <div className="h-full w-full bg-white border-r border-gray-100 flex flex-col z-40 text-black shadow-[4px_0_24px_rgba(0,0,0,0.02)]" data-testid="sidebar">
       {/* Header */}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
@@ -432,7 +432,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`sidebar-item ${item.current ? 'active text-black' : 'text-black hover:text-black'}`}
+              className={`sidebar-item ${item.current ? 'active text-[#11754c]' : 'text-gray-600 hover:text-gray-900'}`}
               data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <item.icon className="w-5 h-5 mr-3" />
@@ -738,7 +738,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile */}
-      < div className="p-3 backdrop-blur-xl border-t border-white/20 shadow-lg flex-shrink-0" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.4) 100%)' }}>
+      <div className="p-4 bg-gray-50 border-t border-gray-100 flex-shrink-0">
         <div className="flex items-center space-x-3 mb-3 p-2 bg-primary/5 rounded-lg">
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-primary-foreground font-semibold text-sm">

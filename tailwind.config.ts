@@ -1,4 +1,4 @@
-﻿import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
@@ -9,6 +9,10 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       colors: {
         background: "var(--background)",

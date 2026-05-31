@@ -701,7 +701,7 @@ export default function MyLeadsPage() {
         <FloatingChatbot />
 
         {/* Main Content */}
-        <div className="space-y-6" data-testid="page-my-leads">
+        <div className="space-y-6 pt-6 px-4 sm:px-6" data-testid="page-my-leads">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -1450,7 +1450,7 @@ export default function MyLeadsPage() {
   return (
     <>
       {/* Main Content */}
-      <div className="space-y-6" data-testid="page-my-leads">
+      <div className="space-y-6 pt-6 px-4 sm:px-6" data-testid="page-my-leads">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

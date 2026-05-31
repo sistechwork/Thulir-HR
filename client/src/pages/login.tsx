@@ -124,177 +124,177 @@ export default function Login() {
   };
 
   return (
-    <div className="landing-background min-h-screen flex items-center justify-center p-4 relative">
-      {/* Decorative HR-themed shape - top left */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#11754c]/40 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen flex bg-white w-full">
+      {/* Left Side: Branding / Visual */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#F8F9FA] relative overflow-hidden items-center justify-center flex-col p-12">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#11754c]/5 to-transparent"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#04e284]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#11754c]/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3"></div>
+        
+        <div className="relative z-10 text-center max-w-md mx-auto">
+           <img src={logoImage} alt="HRM Portal Logo" className="h-40 object-contain mx-auto mb-12 drop-shadow-xl hover:scale-105 transition-transform duration-500" />
+           <h1 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">Enterprise HR<br />Management</h1>
+           <p className="text-lg text-gray-600 leading-relaxed">Streamline your recruitment and human resources workflow with intelligent tools and precise analytics.</p>
+        </div>
+      </div>
 
-      {/* Decorative shape - middle right */}
-      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-[#04e284]/35 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* Diagonal accent shape - bottom */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-40 bg-gradient-to-t from-[#11754c]/30 to-transparent skew-y-3 pointer-events-none"></div>
-
-      {/* Floating Chatbot Button */}
-      <FloatingChatbot />
-
-      {/* Center: Login Form Section */}
-      <div className="w-full relative z-10 flex justify-center items-center min-h-screen">
-        <div className="px-4 max-w-lg w-full py-8">
-          {/* Logo Section */}
-          <div className="text-center mb-8 sm:mb-12">
-            <img
-              src={logoImage}
-              alt="VHomofi HRM Portal Logo"
-              className="h-24 sm:h-32 md:h-40 object-contain mx-auto"
-            />
+      {/* Right Side: Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-white relative">
+        <FloatingChatbot />
+        
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-12 text-center">
+            <img src={logoImage} alt="Logo" className="h-24 object-contain mx-auto drop-shadow-md" />
+          </div>
+          
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Welcome back</h2>
+            <p className="text-gray-500 text-lg">Please enter your details to sign in.</p>
           </div>
 
-          {/* Login Container */}
-          <div className="backdrop-blur-[100px] rounded-[24px] sm:rounded-[32px] p-6 sm:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/20 text-gray-900" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.7), rgba(255,255,255,0.5))', boxShadow: '0 20px 50px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4)' }}>
-
-            {/* Admin Role Selection - Shown after Admin login */}
-            {showAdminRoleSelection && userRole === 'admin' ? (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-[#11754c] dark:text-[#04e284] mb-2">Welcome, {userName}</h2>
-                  <p className="text-[#666666] dark:text-[#999999]">Select your admin role to continue</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#1a1a1a] dark:text-[#f5f5f5] mb-3">
-                    Admin Role
-                  </label>
-                  <Select value={selectedAdminRole} onValueChange={setSelectedAdminRole}>
-                    <SelectTrigger className="w-full px-5 py-4 text-base border border-[#e0e0e0] dark:border-[#333333] rounded-lg bg-[#F9F9F9] dark:bg-[#2a2a2a] text-[#1a1a1a] dark:text-[#f5f5f5] focus:border-[#11754c] dark:focus:border-[#04e284]" data-testid="select-admin-role">
-                      <SelectValue placeholder="Select admin role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin_organizer">Admin Organizer</SelectItem>
-                      <SelectItem value="session_organizer">Session Organizer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-[#666666] dark:text-[#999999] mt-2">
-                    {selectedAdminRole === 'admin_organizer'
-                      ? '• Admin Organizer: Access to manager dashboard and user management'
-                      : '• Session Organizer: Access to accounts tally and completed data view'}
-                  </p>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleAdminRoleSelect}
-                  className="w-full py-3 px-4 rounded-md bg-[#11754c] hover:bg-[#04e284] text-white font-medium transition-all duration-200"
-                  data-testid="button-admin-role-select"
-                >
-                  Continue to Dashboard
-                </Button>
+          {/* Admin Role Selection - Shown after Admin login */}
+          {showAdminRoleSelection && userRole === 'admin' ? (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Hello, {userName}</h3>
+                <p className="text-gray-500">Select your admin role to continue</p>
               </div>
-            ) : (
-              <>
-                {/* Error Message */}
-                {generalError && (
-                  <div className="mb-6 p-4 rounded-md bg-[#D62828] bg-opacity-10 border border-[#D62828]">
-                    <p className="text-[#D62828] text-sm font-medium">{generalError}</p>
-                  </div>
-                )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                  {/* Username/Email Field */}
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-[#1a1a1a] dark:text-[#f5f5f5] mb-2">
-                      Username / Email
-                    </label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Admin Role
+                </label>
+                <Select value={selectedAdminRole} onValueChange={setSelectedAdminRole}>
+                  <SelectTrigger className="w-full px-4 py-6 text-base border-gray-200 rounded-xl bg-gray-50 text-gray-900 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" data-testid="select-admin-role">
+                    <SelectValue placeholder="Select admin role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin_organizer">Admin Organizer</SelectItem>
+                    <SelectItem value="session_organizer">Session Organizer</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500 mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  {selectedAdminRole === 'admin_organizer'
+                    ? '• Admin Organizer: Access to manager dashboard and user management'
+                    : '• Session Organizer: Access to accounts tally and completed data view'}
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleAdminRoleSelect}
+                className="w-full py-6 rounded-xl bg-[#11754c] hover:bg-[#0e623b] hover:shadow-lg hover:shadow-[#11754c]/20 text-white font-medium text-lg transition-all duration-300"
+                data-testid="button-admin-role-select"
+              >
+                Continue to Dashboard
+              </Button>
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Error Message */}
+              {generalError && (
+                <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-100 flex items-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-3"></div>
+                  <p className="text-red-700 text-sm font-medium">{generalError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Username/Email Field */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+                    Username / Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email or username"
+                    className="w-full px-4 py-4 text-base border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#11754c]/10 focus:border-[#11754c] focus:bg-white transition-all shadow-sm"
+                    data-testid="input-email"
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center"><span className="w-1 h-1 rounded-full bg-red-500 mr-2"></span>{errors.email.message}</p>
+                  )}
+                </div>
+
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                    Password
+                  </label>
+                  <div className="relative">
                     <input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email or username"
-                      className="w-full px-5 py-4 text-base border border-[#e0e0e0] dark:border-[#333333] rounded-lg bg-[#F9F9F9] dark:bg-[#2a2a2a] text-[#1a1a1a] dark:text-[#f5f5f5] placeholder-[#999999] focus:outline-none focus:border-[#11754c] dark:focus:border-[#04e284] transition-colors"
-                      data-testid="input-email"
-                      {...register("email")}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="w-full px-4 py-4 pr-12 text-base border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#11754c]/10 focus:border-[#11754c] focus:bg-white transition-all shadow-sm"
+                      data-testid="input-password"
+                      {...register("password")}
                     />
-                    {errors.email && (
-                      <p className="mt-2 text-sm text-[#D62828]">{errors.email.message}</p>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                      data-testid="button-toggle-password"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
+                  {errors.password && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center"><span className="w-1 h-1 rounded-full bg-red-500 mr-2"></span>{errors.password.message}</p>
+                  )}
+                </div>
 
-                  {/* Password Field */}
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-[#1a1a1a] dark:text-[#f5f5f5] mb-2">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        className="w-full px-5 py-4 pr-14 text-base border border-[#e0e0e0] dark:border-[#333333] rounded-lg bg-[#F9F9F9] dark:bg-[#2a2a2a] text-[#1a1a1a] dark:text-[#f5f5f5] placeholder-[#999999] focus:outline-none focus:border-[#11754c] dark:focus:border-[#04e284] transition-colors"
-                        data-testid="input-password"
-                        {...register("password")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-[#666666] dark:text-[#999999] hover:text-[#1a1a1a] dark:hover:text-[#f5f5f5]"
-                        data-testid="button-toggle-password"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="mt-2 text-sm text-[#D62828]">{errors.password.message}</p>
-                    )}
-                  </div>
-
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center cursor-pointer">
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between pt-2 pb-4">
+                  <label className="flex items-center cursor-pointer group">
+                    <div className="relative flex items-center justify-center">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-[#e0e0e0] text-[#11754c] focus:ring-[#11754c]"
+                        className="peer w-5 h-5 rounded border-gray-300 text-[#11754c] focus:ring-[#11754c] transition-all cursor-pointer"
                       />
-                      <span className="ml-2 text-sm text-[#666666] dark:text-[#999999]">Remember me</span>
-                    </label>
-                    <a href="#" className="text-sm text-[#11754c] hover:text-[#04e284] font-medium transition-colors">
-                      Forgot Password?
-                    </a>
-                  </div>
+                    </div>
+                    <span className="ml-3 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Remember me</span>
+                  </label>
+                  <a href="#" className="text-sm text-[#11754c] hover:text-[#0e623b] font-semibold transition-colors">
+                    Forgot Password?
+                  </a>
+                </div>
 
-                  {/* Sign In Button */}
-                  <Button
-                    type="submit"
-                    disabled={loginMutation.isPending}
-                    className="w-full py-3 px-4 rounded-md bg-[#11754c] hover:bg-[#04e284] text-white font-medium transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-80"
-                    data-testid="button-login-submit"
-                    style={{
-                      backgroundColor: loginMutation.isPending ? "#04e284" : "#11754c",
-                    }}
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Signing in...</span>
-                      </>
-                    ) : (
-                      <span>Sign In</span>
-                    )}
-                  </Button>
-                </form>
-              </>
-            )}
+                {/* Sign In Button */}
+                <Button
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className="w-full py-6 rounded-xl bg-[#11754c] hover:bg-[#0e623b] hover:shadow-lg hover:shadow-[#11754c]/20 text-white font-medium text-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:hover:shadow-none"
+                  data-testid="button-login-submit"
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </Button>
+              </form>
+            </div>
+          )}
 
-            {/* Footer Text */}
-            {!loginSuccess && (
-              <p className="text-center text-sm text-[#666666] dark:text-[#999999] mt-8">
-                Secure login to your HRM Portal
-              </p>
-            )}
-          </div>
+          {/* Footer Text */}
+          {!loginSuccess && (
+            <p className="text-center text-sm text-gray-400 mt-12 font-medium">
+              Secure Enterprise Portal
+            </p>
+          )}
         </div>
       </div>
     </div>
