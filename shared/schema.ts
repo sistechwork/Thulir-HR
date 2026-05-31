@@ -348,7 +348,7 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  status: z.enum(["new", "register", "scheduled", "completed", "pending", "ready_for_class", "call_back", "dropped"]).optional(),
+  status: z.enum(["new", "register", "scheduled", "completed", "pending", "ready_for_class", "call_back", "dropped", "not_interested", "not_picking", "wrong_number"]).optional(),
   sessionDays: z.enum(["M,W,F", "T,T,S", "daily", "weekend", "custom"]).nullable().optional(),
   yearOfPassing: z.string().nullable().optional(),
   collegeName: z.string().nullable().optional(),

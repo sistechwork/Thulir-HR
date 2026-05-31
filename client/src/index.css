@@ -82,7 +82,7 @@
   }
 
   .status-not-interested {
-    @apply bg-red-300 text-red-900 dark:bg-red-800/40 dark:text-red-300;
+    @apply !bg-red-300 !text-red-900 dark:!bg-red-800/40 dark:!text-red-300;
   }
 
   .status-not-picking {

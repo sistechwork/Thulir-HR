@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import cropLogo from "../assets/crop_logo.png";
 
 export default function Sidebar() {
   const [location] = useLocation();
@@ -390,7 +391,7 @@ export default function Sidebar() {
       {/* Header */}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <Building2 className="h-8 w-8 text-primary" />
+          <img src={cropLogo} alt="HRM Logo" className="h-10 w-auto object-contain" />
           <div>
             <h2 className="text-xl font-bold text-black">HRM Portal</h2>
             <p className="text-sm text-gray-800">

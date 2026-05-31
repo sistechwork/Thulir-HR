@@ -1148,7 +1148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const filters = {
         hrFilterId: userId,
-        status: 'dropped',
+        statuses: ['dropped', 'not_interested', 'not_picking', 'wrong_number'],
         search: search as string,
         page: parseInt(page as string),
         limit: parseInt(limit as string)
@@ -2088,8 +2088,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid lead ID" });
       }
 
-      if (!['dropped'].includes(releaseReason)) {
-        return res.status(400).json({ message: "Invalid release reason. Use 'dropped'." });
+      if (!['not_interested', 'not_picking', 'wrong_number'].includes(releaseReason)) {
+        return res.status(400).json({ message: "Invalid release reason." });
       }
 
       const currentLead = await storage.getLead(leadId);
@@ -2131,6 +2131,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error releasing lead:", error);
       res.status(500).json({ message: "Failed to release lead" });
+    }
+  });
+
+  // Reclaim lead route (for HR to pull back a lead they dropped or completed)
+  app.post('/api/leads/:id/reclaim', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      const userRole = currentUser?.role || 'hr';
+      const { id } = req.params;
+
+      const leadId = parseInt(id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      if (userRole !== 'hr') {
+        return res.status(403).json({ message: "Access denied: Only HR can reclaim leads" });
+      }
+
+      const currentLead = await storage.getLead(leadId);
+      if (!currentLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      const reclaimedLead = await storage.assignLead(leadId, userId, userId, "Reclaimed lead to My Leads");
+      // Set status to pending
+      await storage.updateLead(leadId, { status: 'pending' });
+
+      res.json({ ...reclaimedLead, status: 'pending' });
+    } catch (error) {
+      console.error("Error reclaiming lead:", error);
+      res.status(500).json({ message: "Failed to reclaim lead" });
+    }
+  });
+
+  // Delete all leads endpoint for manager/admin (MUST be before /api/leads/:id to prevent route conflict)
+  app.delete('/api/leads/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user.role;
+      if (userRole !== 'manager' && userRole !== 'admin') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      // Use TRUNCATE CASCADE to automatically wipe leads and all related foreign key rows
+      await db.execute(sql`TRUNCATE TABLE leads CASCADE`);
+      res.json({ message: "All leads deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting all leads:", error);
+      res.status(500).json({ message: "Failed to delete all leads" });
     }
   });
 
@@ -3122,12 +3172,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       try {
         const execFileAsync = util.promisify(execFile);
-        const pythonExec = path.join(process.cwd(), 'server', 'scripts', 'venv', 'Scripts', 'python.exe');
+        let pythonExec = 'python';
         const scriptPath = path.join(process.cwd(), 'server', 'scripts', 'extract_resume.py');
         
         const args = [scriptPath, ...tempFiles.map(f => f.path)];
         
-        const { stdout } = await execFileAsync(pythonExec, args, { maxBuffer: 1024 * 1024 * 50 }); // 50MB buffer
+        const { stdout } = await execFileAsync(pythonExec, args, { maxBuffer: 1024 * 1024 * 50, shell: true }); // 50MB buffer
         
         // Python returns an array of results
         const parsedResults = JSON.parse(stdout);
@@ -3228,6 +3278,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(finalResults);
       } catch (err: any) {
         console.error('Error running OCR script:', err);
+        if (err.stderr) console.error('Python stderr:', err.stderr.toString());
+        if (err.stdout) console.error('Python stdout:', err.stdout.toString());
         res.status(500).json({ message: "Failed to extract text via OCR" });
       } finally {
         // Clean up temp files
@@ -4305,30 +4357,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authenticatedClients.delete(ws);
       console.log(`WebSocket client disconnected: ${userId}`);
     });
-  });
-
-  // Delete all leads endpoint for manager/admin
-  app.delete('/api/leads/all', isAuthenticated, async (req: any, res) => {
-    try {
-      const userRole = req.user.role;
-      if (userRole !== 'manager' && userRole !== 'admin') {
-        return res.status(403).json({ message: "Insufficient permissions" });
-      }
-      
-      // Delete dependencies first
-      await db.delete(notifications);
-      await db.delete(leadHistory);
-      await db.delete(classStudents);
-      await db.delete(attendance);
-      await db.delete(marks);
-      
-      // Delete leads
-      await db.delete(leads);
-      res.json({ message: "All leads deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting all leads:", error);
-      res.status(500).json({ message: "Failed to delete all leads" });
-    }
   });
 
   // Delete all temp leads endpoint for manager/admin

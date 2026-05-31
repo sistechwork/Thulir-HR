@@ -11,7 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Edit, History, MoreVertical, UserPlus, Trash2 } from "lucide-react";
+import { Eye, Edit, History, MoreVertical, UserPlus, Trash2, CheckCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +108,60 @@ export default function LeadTable({
       toast({
         title: "Failed to Delete Lead",
         description: error.message || "An error occurred while deleting the lead.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update lead status mutation for HR quick actions
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ leadId, status }: { leadId: number, status: string }) => {
+      const response = await apiRequest("PUT", `/api/leads/${leadId}`, { status });
+      if (!response.ok) throw new Error("Failed to update status");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status Updated",
+        description: "Lead status has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/completed"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/drops"] });
+      onRefresh();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "An error occurred while updating status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reclaim lead mutation for HR to pull back a lead they dropped or completed
+  const reclaimLeadMutation = useMutation({
+    mutationFn: async (leadId: number) => {
+      const response = await apiRequest("POST", `/api/leads/${leadId}/reclaim`);
+      if (!response.ok) throw new Error("Failed to reclaim lead");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Lead Reclaimed",
+        description: "Lead has been added to your leads successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/completed"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my/drops"] });
+      onRefresh();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reclaim Failed",
+        description: error.message || "An error occurred while reclaiming lead.",
         variant: "destructive",
       });
     },
@@ -403,6 +457,37 @@ export default function LeadTable({
                         >
                           <UserPlus className="mr-2 h-4 w-4" />
                           {claimLeadMutation.isPending ? "Adding..." : "Add to My Leads"}
+                        </DropdownMenuItem>
+                      )}
+                      
+                      {/* My Completion Actions for HR */}
+                      {(user as any)?.role === 'hr' && lead.status === 'completed' && (
+                        <>
+                          <DropdownMenuItem 
+                            onClick={() => updateStatusMutation.mutate({ leadId: lead.id, status: 'ready_for_class' })}
+                            disabled={updateStatusMutation.isPending}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Ready for Class
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => reclaimLeadMutation.mutate(lead.id)}
+                            disabled={reclaimLeadMutation.isPending}
+                          >
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Add to My Leads
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* My Drops Actions for HR */}
+                      {(user as any)?.role === 'hr' && ['dropped', 'not_interested', 'not_picking', 'wrong_number'].includes(lead.status) && (
+                        <DropdownMenuItem 
+                          onClick={() => reclaimLeadMutation.mutate(lead.id)}
+                          disabled={reclaimLeadMutation.isPending}
+                        >
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Add to My Leads
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

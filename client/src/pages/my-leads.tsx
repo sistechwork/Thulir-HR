@@ -134,8 +134,7 @@ const statusOptions = [
   { value: 'reshedule', label: 'Reshedule' },
   { value: 'register', label: 'Register' },
   { value: 'completed', label: 'Completed' },
-  { value: 'not_picking', label: 'Not Picking' },
-  { value: 'not_interest', label: 'Not Interest' },
+  { value: 'pending', label: 'Pending' },
   { value: 'dropped', label: 'Dropped' },
   { value: 'call_back', label: 'Call Back' },
 ];
@@ -500,9 +499,37 @@ export default function MyLeadsPage() {
   };
 
   const handleSubmitEdit = (data: EditLeadForm) => {
-    console.log("Form submission - editingLeadId:", editingLeadId);
-    console.log("Form data:", data);
-    console.log("Form errors:", form.formState.errors);
+    // If trying to drop a new lead from the form directly
+    if (data.status === 'dropped') {
+      const currentLead = leads.find((l: any) => l.id === editingLeadId);
+      if (currentLead?.status === 'new') {
+        toast({
+          title: "Action Not Allowed",
+          description: "You cannot drop new leads directly from this form. Please use the Release button instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Enforce all fields (except notes and reason) are filled for 'completed' status
+    if (data.status === 'completed') {
+      const requiredFields = ['name', 'email', 'phone', 'location', 'degree', 'domain', 'walkinDate', 'walkinTime', 'registrationAmount', 'pendingAmount', 'partialAmount', 'transactionNumber', 'concession', 'yearOfPassing', 'collegeName'];
+      const missingFields = requiredFields.filter(key => {
+        const val = data[key as keyof EditLeadForm];
+        return val === undefined || val === null || val.toString().trim() === '';
+      });
+
+      if (missingFields.length > 0) {
+        toast({
+          title: "Missing Required Fields",
+          description: "All fields except Notes and Reason for Change must be filled for Completed status. If a field is not applicable, please enter 'nil' or '0'.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (editingLeadId) {
       updateLeadMutation.mutate({ leadId: editingLeadId, data });
     }
@@ -1638,6 +1665,15 @@ export default function MyLeadsPage() {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (lead.status !== 'new') {
+                              alert("Action Not Allowed: You can only release new leads. For other leads, please edit the lead and change the status to 'Dropped'.");
+                              toast({
+                                title: "Action Not Allowed",
+                                description: "You can only release new leads. For other leads, please edit the lead and change the status to 'Dropped'.",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
                             setReleaseLeadId(lead.id);
                           }}
                           className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
@@ -2158,47 +2194,6 @@ export default function MyLeadsPage() {
                               <SelectItem value="COURSE">COURSE</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="registrationAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Registration Amount</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="e.g., 5000.00"
-                              {...field}
-                              data-testid="input-edit-registration-amount"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="pendingAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Pending Amount</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="e.g., 2000.00"
-                              {...field}
-                              data-testid="input-edit-pending-amount"
-                            />
-                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -2830,7 +2825,9 @@ export default function MyLeadsPage() {
                 onChange={(e) => setReleaseReason(e.target.value)}
               >
                 <option value="" disabled>Select a reason...</option>
-                <option value="dropped">Dropped</option>
+                <option value="not_interested">Not Interested</option>
+                <option value="not_picking">Not Picking</option>
+                <option value="wrong_number">Wrong Number</option>
               </select>
             </div>
             <DialogFooter>

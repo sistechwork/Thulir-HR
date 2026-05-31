@@ -91,8 +91,8 @@ const statusOptions = [
 const getAllowedStatuses = (currentStatus: string) => {
   switch (currentStatus) {
     case 'new':
-      // From new, can go to any status except back to new is handled by backend
-      return statusOptions.filter(s => s.value !== 'new' || currentStatus === 'new');
+      // From new, can go to any status except dropped directly, or back to new
+      return statusOptions.filter(s => s.value !== 'new' && s.value !== 'dropped' || currentStatus === 'new');
     case 'register':
       // From register, can only go to completed, pending, ready_for_class, dropped
       return statusOptions.filter(s => 
@@ -265,12 +265,40 @@ export default function LeadDetailsModal({ lead, isOpen, onClose, onUpdate, read
   };
 
   const onSubmit = (data: UpdateLeadForm) => {
+    // If trying to drop a new lead from the form directly (in case they bypass the frontend filter)
+    if (data.status === 'dropped' && lead.status === 'new') {
+      toast({
+        title: "Action Not Allowed",
+        description: "You cannot drop new leads directly from this form. Please use the Release button instead.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // If status is changing to scheduled, validate required fields
     if (data.status === 'scheduled' && lead.status !== 'scheduled') {
       if (!data.walkinDate || !data.walkinTime || !data.domain || !data.sessionDays) {
         toast({
           title: "Missing Information",
           description: "Walk-in date, time, domain, and session days are required for scheduled status",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Enforce all fields (except notes and reason) are filled for 'completed' status
+    if (data.status === 'completed') {
+      const requiredFields = ['name', 'email', 'phone', 'location', 'degree', 'domain', 'walkinDate', 'walkinTime', 'registrationAmount', 'pendingAmount', 'partialAmount', 'transactionNumber', 'concession', 'yearOfPassing', 'collegeName'];
+      const missingFields = requiredFields.filter(key => {
+        const val = data[key as keyof UpdateLeadForm];
+        return val === undefined || val === null || val.toString().trim() === '';
+      });
+
+      if (missingFields.length > 0) {
+        toast({
+          title: "Missing Required Fields",
+          description: "All fields except Notes and Reason for Change must be filled for Completed status. If a field is not applicable, please enter 'nil' or '0'.",
           variant: "destructive",
         });
         return;
