@@ -1,7 +1,8 @@
-providers = ["node", "python"]
-# Explicitly use both Node.js (for the main app) and Python (for the OCR script)
+providers = ["node"]
+# Explicitly use Node.js provider, and install Python via nix packages to avoid garbage collection
 
 [phases.setup]
+nixPkgs = ["...", "python3"]
 # Install system dependencies required for OpenCV and Tesseract OCR
 aptPkgs = ["tesseract-ocr", "tesseract-ocr-eng", "libgl1", "libglib2.0-0"]
 
