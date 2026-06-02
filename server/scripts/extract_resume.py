@@ -6,10 +6,26 @@ import numpy as np
 from PIL import Image
 import pytesseract
 import platform
+import shutil
+import os
 
-# Specify Tesseract path for Windows if it's installed in the default location
-if platform.system() == "Windows":
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# 1. First, check if tesseract is in the system PATH (best practice)
+tesseract_path = shutil.which('tesseract')
+
+if tesseract_path:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+elif platform.system() == "Windows":
+    # 2. Fallback to common Windows default installation paths if not in PATH
+    common_paths = [
+        r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+        r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
+        os.path.expandvars(r'%LOCALAPPDATA%\Tesseract-OCR\tesseract.exe'),
+        os.path.expandvars(r'%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe')
+    ]
+    for p in common_paths:
+        if os.path.exists(p):
+            pytesseract.pytesseract.tesseract_cmd = p
+            break
 
 # ─── OCR ─────────────────────────────────────────────────────────────────────
 

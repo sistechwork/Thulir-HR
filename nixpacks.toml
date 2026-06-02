@@ -1,0 +1,18 @@
+[providers]
+# Explicitly use both Node.js (for the main app) and Python (for the OCR script)
+node = {}
+python = {}
+
+[phases.setup]
+# Install system dependencies required for OpenCV and Tesseract OCR
+aptPkgs = ["...", "tesseract-ocr", "tesseract-ocr-eng", "libgl1", "libglib2.0-0"]
+
+[phases.install]
+# Ensure both NPM packages and Python packages are installed correctly
+cmds = [
+    "npm install",
+    "pip install -r server/scripts/requirements.txt"
+]
+
+[phases.build]
+cmds = ["npm run build"]
