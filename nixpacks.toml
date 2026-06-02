@@ -1,17 +1,23 @@
-providers = ["node"]
-# Explicitly use Node.js provider, and install Python via nix packages to avoid garbage collection
+providers = ["...", "node"]
 
 [phases.setup]
-nixPkgs = ["...", "python3"]
-# Install system dependencies required for OpenCV and Tesseract OCR
-aptPkgs = ["tesseract-ocr", "tesseract-ocr-eng", "libgl1", "libglib2.0-0"]
+nixPkgs = ["...", "python3", "python3Packages.pip"]
+
+aptPkgs = [
+  "tesseract-ocr",
+  "tesseract-ocr-eng",
+  "libgl1",
+  "libglib2.0-0"
+]
 
 [phases.install]
-# Ensure both NPM packages and Python packages are installed correctly
 cmds = [
-    "npm install",
-    "pip install -r server/scripts/requirements.txt"
+  "npm install",
+  "python3 -m pip install --upgrade pip",
+  "python3 -m pip install -r server/scripts/requirements.txt"
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "npm run build"
+]
