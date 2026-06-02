@@ -1,8 +1,6 @@
-providers = ["...", "node"]
+providers = ["python", "node"]
 
 [phases.setup]
-nixPkgs = ["...", "python3", "python3Packages.pip"]
-
 aptPkgs = [
   "tesseract-ocr",
   "tesseract-ocr-eng",
@@ -12,9 +10,7 @@ aptPkgs = [
 
 [phases.install]
 cmds = [
-  "npm install",
-  "python3 -m pip install --upgrade pip",
-  "python3 -m pip install -r server/scripts/requirements.txt"
+  "npm install"
 ]
 
 [phases.build]
