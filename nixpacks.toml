@@ -1,19 +1,10 @@
-providers = ["python", "node"]
+providers = ["...", "python", "node"]
 
 [phases.setup]
 aptPkgs = [
+  "...",
   "tesseract-ocr",
   "tesseract-ocr-eng",
   "libgl1",
   "libglib2.0-0"
-]
-
-[phases.install]
-cmds = [
-  "npm install"
-]
-
-[phases.build]
-cmds = [
-  "npm run build"
 ]
